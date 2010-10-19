@@ -32,7 +32,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
-#include "stdbool.h"
+#include <stdbool.h>
 #include <string.h>
 #include "rum_types.h"
 #include "mac.h"

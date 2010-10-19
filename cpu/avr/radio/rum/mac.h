@@ -150,7 +150,7 @@ macDataRequest()          --->       ftData       --->        macDataIndication(
 
 // Includes
 #include <stdint.h>
-#include "stdbool.h"
+#include <stdbool.h>
 #include "rum_types.h"
 
 #define RUM_VERSION                    "V0.9"

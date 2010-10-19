@@ -34,7 +34,7 @@
 #define RADIO_H
 /*============================ INCLUDE =======================================*/
 #include <stdint.h>
-#include "stdbool.h"
+#include <stdbool.h>
 #include "rum_types.h"
 
 /*============================ MACROS ========================================*/

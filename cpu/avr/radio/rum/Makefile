@@ -124,8 +124,6 @@ ASMFLAGS += -x assembler-with-cpp -Wa,-gstabs
 LDFLAGS = $(COMMON)
 LDFLAGS += -Wl,-Map=$(TYPE)$(PROJECT).map,--cref
 LDFLAGS += -Wl,--section-start=.bootloader=$(BOOTLOADER_START)
-#LDFLAGS += -L$(AVR_BINUTILS_DIR) -L$(AVR_GCC_DIR) -L$(AVR_LIBRARIES)
-#LDFLAGS += -m avr51
 
 ## Make sure DEBUG is defined
 ifndef DEBUG
@@ -155,8 +153,8 @@ HEX_EEPROM_FLAGS += --change-section-lma .eeprom=0
 INCLUDES =
 
 ## Objects that must be built in order to link
-SRC = radio.c main.c hal_avr.c serial.c mac_event.c mac.c \
-	mac_scan.c avr_timer.c mac_data.c mac_beacon.c \
+SRC = radio.c main.c hal.c serial.c mac_event.c mac.c \
+	mac_scan.c timer.c mac_data.c mac_beacon.c \
 	mac_start.c rum_application.c mac_associate.c mac_route.c \
 	sensors.c sleep.c avr_sixlowpan.c avr_sixlowpan_application.c \
 	sixlowpan_wake.c bootloader.c

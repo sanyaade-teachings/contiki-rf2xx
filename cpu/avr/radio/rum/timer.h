@@ -26,18 +26,70 @@
   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
   POSSIBILITY OF SUCH DAMAGE.
 */
-/*    
-  $Id: timer.h,v 1.1 2009/05/20 20:52:01 mvidales Exp $
+/*
+  $Id: avr_timer.h,v 1.1 2009/05/20 20:52:01 mvidales Exp $
 */
-#ifndef TIMER_H
-#define TIMER_H
+#ifndef AVRTIMERH
+#define AVRTIMERH
 
-#if __AVR__
-#include "avr_timer.h"
+#include "system.h"
+
+void timerInit(void);
+
+/**
+   @return the time, in mS. Note this time is in the range
+   0 - 65535 milliseconds, and the time overflows every
+   65 seconds!
+*/
+u16 macGetTime(void);
+
+/**
+   @brief Sets a timeout value, used for sixlowpan sleeping.
+*/
+void macSetTimeout(u16 timeout);
+
+u8 macSetAlarm(u16 microseconds, void(*callback)(void));
+
+void macTimerEnd(u8 timerID);
+/**
+   @addtogroup timer_module
+   @{
+*/
+
+u8 macSetLongAlarm(u16 seconds, void(*callback)(void));
+
+
+/**
+   Microseconds per tick of the timer. Adjust if the timer settings
+   change.  Note that this number must divide cleanly into 1000 for
+   macSetAlarm to work.
+*/
+#define MS_PER_TICK (1)
+
+
+/**
+   @name Tick Timer Macros
+
+   For the macAlarm timer.
+   @{
+*/
+/// Sets timer Prescaler to 8, sets timer output compare register init
+/// the timer to run all the time.
+#define TIMER_INIT() TCCR(TICKTIMER,B) |= (1 << CS(TICKTIMER,1)) |  \
+        (1 << WGM(TICKTIMER,2)), OCR(TICKTIMER,A) = (MS_PER_TICK * 1000 /\
+                                                     (8000000UL/F_CPU))
+/// Stops the timer for sleep
+//#define TIMER_STOP() (TCCR(TICKTIMER,B) = 0)
+/// Clear the timer count to zero
+#define TIMER_CLEAR() (TCNT(TICKTIMER) = 0)
+/// Enable the timer to run
+#define TIMER_ENABLE() (TIMSK(TICKTIMER) = (1 << OCIE(TICKTIMER,A)))
+/// Stop the timer
+#define TIMER_STOP() (TIMSK(TICKTIMER) &= ~(1 << OCIE(TICKTIMER,A)))
+/// Tick timer ISR vector function
+#define TICKVECT COMPVECT(TICKTIMER)   // IAR doesn't accept this macro inside the ISR() macro
+/** @} */
+
+/** @} */
+
 #endif
-
-#if __arm__
-#include "arm_timer.h"
-#endif
-
-#endif //TIMER_H
