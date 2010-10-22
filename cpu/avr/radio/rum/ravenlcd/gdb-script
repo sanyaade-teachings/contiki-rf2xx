@@ -1,3 +1,0 @@
-shell "./avarice-script"
-target remote :4242
-break main

@@ -9,6 +9,10 @@
  *	Mike Vidales mavida404@gmail.com
  *	Kevin Brown kbrown3@uccs.edu
  *	Nate Bohlmann nate@elfwerks.com
+ *  
+ *  ATMEL RUM v1.0.0 porting by:
+ *
+ *	Ilya Dmitrichenko errordeveloper@gmail.com
  *
  *   All rights reserved.
  *
@@ -126,12 +130,32 @@ static hal_rx_start_isr_event_handler_t rx_start_callback;
  */
 static hal_trx_end_isr_event_handler_t trx_end_callback;
 /*============================ PROTOTYPES ====================================*/
+
+extern u8 rx_mode;
+
 /*============================ IMPLEMENTATION ================================*/
 
-/** \brief  This function initializes the Hardware Abstraction Layer.
+/** \brief This function initializes Serial Peripheral Interface (SPI).
+ */
+void hal_spi_init(void) /* PORTREF: line 76 */
+{
+    /*SPI Specific Initialization.*/
+    //Set SCK and MOSI as output.
+    HAL_DDR_SPI  |= (1 << HAL_DD_SCK) | (1 << HAL_DD_MOSI);
+    HAL_PORT_SPI |= (1 << HAL_DD_SCK); //Set CLK high
+    // Setup slave select pin as output, and high
+    HAL_DDR_SS  |= (1 << SSPIN);
+    HAL_PORT_SS |= (1 << SSPIN);
+
+    //Enable SPI module and master operation.
+    SPCR         = (1 << SPE) | (1 << MSTR);
+    //Enable doubled SPI speed in master mode.
+    SPSR         = (1 << SPI2X);
+
+/** \brief  This function initializes the Hardware Abstraction Layer (HAL).
  */
 void
-hal_init(void)
+hal_init(void) /* PORTREF: line 95 */
 {
     /*Reset variables used in file.*/
     hal_system_time = 0;
@@ -141,19 +165,15 @@ hal_init(void)
     DDR_SLP_TR |= (1 << SLP_TR); /* Enable SLP_TR as output. */
     DDR_RST    |= (1 << RST);    /* Enable RST as output. */
 
-    /*SPI Specific Initialization.*/
-    /* Set SS, CLK and MOSI as output. */
-    HAL_DDR_SPI  |= (1 << HAL_DD_SS) | (1 << HAL_DD_SCK) | (1 << HAL_DD_MOSI);
-    HAL_PORT_SPI |= (1 << HAL_DD_SS) | (1 << HAL_DD_SCK); /* Set SS and CLK high */
-    /* Run SPI at max speed */
-    SPCR         = (1 << SPE) | (1 << MSTR); /* Enable SPI module and master operation. */
-    SPSR         = (1 << SPI2X); /* Enable doubled SPI speed in master mode. */
+    hal_spi_init();
+    hal_enable_trx_interrupt();  /* Enable interrupts from the radio transceiver. */
 
+    /*NOTE: in atmel code the belove is not here, leave it for now */
     /*TIMER1 Specific Initialization.*/
     TCCR1B = HAL_TCCR1B_CONFIG;       /* Set clock prescaler */
     TIFR1 |= (1 << ICF1);             /* Clear Input Capture Flag. */
-    HAL_ENABLE_OVERFLOW_INTERRUPT(); /* Enable Timer1 overflow interrupt. */
-    hal_enable_trx_interrupt();    /* Enable interrupts from the radio transceiver. */
+    HAL_ENABLE_OVERFLOW_INTERRUPT();  /* Enable Timer1 overflow interrupt. */
+    hal_enable_trx_interrupt();       /* Enable interrupts from the radio transceiver. */
 }
 
 /*----------------------------------------------------------------------------*/
@@ -302,10 +322,10 @@ hal_clear_pll_lock_flag(void)
  *  \returns The actual value of the read register.
  */
 uint8_t
-hal_register_read(uint8_t address)
+hal_register_read(uint8_t address) /* PORTREF: line 115 */
 {
     /* Add the register read command to the register address. */
-    address &= HAL_TRX_CMD_RADDRM;
+    /* address &= HAL_TRX_CMD_RADDRM; */
     address |= HAL_TRX_CMD_RR;
 
     uint8_t register_value = 0;
@@ -340,7 +360,7 @@ hal_register_read(uint8_t address)
  *  \param  value   Value to write.
  */
 void
-hal_register_write(uint8_t address, uint8_t value)
+hal_register_write(uint8_t address, uint8_t value) /* PORTREF: line 152 */
 {
     /* Add the Register Write command to the address. */
     address = HAL_TRX_CMD_RW | (HAL_TRX_CMD_RADDRM & address);
@@ -349,18 +369,31 @@ hal_register_write(uint8_t address, uint8_t value)
 
     HAL_SS_LOW(); /* Start the SPI transaction by pulling the Slave Select low. */
 
+
     /*Send Register address and write register content.*/
     SPDR = address;
     while ((SPSR & (1 << SPIF)) == 0) {;}
-    uint8_t dummy_read = SPDR;
+    SPDR;  // Dummy read of SPDR
 
     SPDR = value;
     while ((SPSR & (1 << SPIF)) == 0) {;}
-    dummy_read = SPDR;
+    SPDR;  // Dummy read of SPDR
 
-    HAL_SS_HIGH(); /* End the transaction by pulling the Slave Slect High. */
+    HAL_SS_HIGH(); //End the transaction by pulling the Slave Slect High.
 
     AVR_LEAVE_CRITICAL_REGION();
+
+    // Set the rx_mode variable based on how we set the radio
+    if ((address & ~HAL_TRX_CMD_RW) == RG_TRX_STATE)
+    {
+        // set rx_mode flag based on mode we're changing to
+        value &= 0x1f;   // Mask for TRX_STATE register
+        if (value == RX_ON ||
+            value == RX_AACK_ON)
+            rx_mode = true;
+        else
+            rx_mode = false;
+    }
 }
 
 /*----------------------------------------------------------------------------*/
@@ -399,7 +432,7 @@ hal_subregister_read(uint8_t address, uint8_t mask, uint8_t position)
  */
 void
 hal_subregister_write(uint8_t address, uint8_t mask, uint8_t position,
-                            uint8_t value)
+                            uint8_t value) /* PORTREF: line 220 */
 {
     /* Read current register value and mask area outside the subregister. */
     uint8_t register_value = hal_register_read(address);
@@ -514,11 +547,15 @@ hal_frame_read(hal_rx_frame_t *rx_frame, rx_callback_t rx_callback)
  *  \param  length          Length of data. The maximum length is 127 bytes.
  */
 void
-hal_frame_write(uint8_t *write_buffer, uint8_t length)
+hal_frame_write(uint8_t *write_buffer, uint8_t length) /* PORTREF: line 311 */
 {
     length &= HAL_TRX_CMD_RADDRM; /* Truncate length to maximum frame length. */
 
     AVR_ENTER_CRITICAL_REGION();
+
+    /*Toggle the SLP_TR pin to initiate the frame transmission. */
+    hal_set_slptr_high();
+    hal_set_slptr_low();
 
     HAL_SS_LOW(); /* Initiate the SPI transaction. */
 
@@ -526,10 +563,14 @@ hal_frame_write(uint8_t *write_buffer, uint8_t length)
     SPDR = HAL_TRX_CMD_FW;
     while ((SPSR & (1 << SPIF)) == 0) {;}
     uint8_t dummy_read = SPDR;
+    /* Could just do this:
+     * SPDR; */
 
     SPDR = length;
     while ((SPSR & (1 << SPIF)) == 0) {;}
     dummy_read = SPDR;
+    /* Here could be the same:
+     * SPDR; */
 
     /* Download to the Frame Buffer. */
     do{
@@ -538,7 +579,7 @@ hal_frame_write(uint8_t *write_buffer, uint8_t length)
 
         while ((SPSR & (1 << SPIF)) == 0) {;}
 
-        dummy_read = SPDR;
+        dummy_read = SPDR; /* Here as well, this would save one variable ... */
     } while (length > 0);
 
     HAL_SS_HIGH(); /* Terminate SPI transaction. */
@@ -556,7 +597,7 @@ hal_frame_write(uint8_t *write_buffer, uint8_t length)
  * \param data Pointer to buffer where data is stored.
  */
 void
-hal_sram_read(uint8_t address, uint8_t length, uint8_t *data)
+hal_sram_read(uint8_t address, uint8_t length, uint8_t *data) /* PORTREF: line 358 */
 {
     AVR_ENTER_CRITICAL_REGION();
 
@@ -565,13 +606,13 @@ hal_sram_read(uint8_t address, uint8_t length, uint8_t *data)
     /*Send SRAM read command.*/
     SPDR = HAL_TRX_CMD_SR;
     while ((SPSR & (1 << SPIF)) == 0) {;}
-    uint8_t dummy_read = SPDR;
+    uint8_t dummy_read = SPDR; /* again .. */
 
     /*Send address where to start reading.*/
     SPDR = address;
     while ((SPSR & (1 << SPIF)) == 0) {;}
 
-    dummy_read = SPDR;
+    dummy_read = SPDR; /* .. and gain */
 
     /*Upload the chosen memory area.*/
     do{
@@ -633,7 +674,7 @@ hal_sram_write(uint8_t address, uint8_t length, uint8_t *data)
  */
 void RADIO_VECT(void);
 #else  /* !DOXYGEN */
-ISR(RADIO_VECT)
+ISR(RADIO_VECT) /* PORTREF: line 438 */
 {
     /*The following code reads the current system time. This is done by first
       reading the hal_system_time and then adding the 16 LSB directly from the
