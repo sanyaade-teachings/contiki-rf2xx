@@ -18,6 +18,8 @@ snoremap % b<BS>%
 snoremap ' b<BS>'
 map Q gq
 snoremap U b<BS>U
+nmap <silent> \aocom :AlignPush:AlignCtrl g /[*/]\acom:AlignPop
+nmap <silent> \t@ :AlignCtrl mIp1P1=l @:'a,.Align
 snoremap \ b<BS>\
 nmap \sv <Plug>SVNVimDiff
 nmap \su <Plug>SVNUpdate
@@ -96,9 +98,7 @@ vmap <silent> \T, :<BS><BS><BS>ma'>\T,
 vmap <silent> \T| :<BS><BS><BS>ma'>\T|
 map <silent> \tdW@ :AlignCtrl v ^\s*/[/*]:AlignCtrl mWp1P1=l @:'a,.Align
 map <silent> \tW@ :AlignCtrl mWp1P1=l @:'a,.Align
-nmap <silent> \t@ :AlignCtrl mIp1P1=l @:'a,.Align
 omap <silent> \t@ :AlignCtrl mIp1P1=l @:'a,.Align
-nmap <silent> \aocom :AlignPush:AlignCtrl g /[*/]\acom:AlignPop
 omap <silent> \aocom :AlignPush:AlignCtrl g /[*/]\acom:AlignPop
 nmap \rx <Plug>Rx
 nmap \ri <Plug>Ri
@@ -198,7 +198,7 @@ if expand('%') == '' && !&modified && line('$') <= 1 && getline(1) == ''
 endif
 set shortmess=aoO
 badd +1 radio.c
-badd +0 ../rum/radio.c
+badd +1 ../rum/radio.c
 args radio.c ../rum/radio.c
 edit radio.c
 set splitbelow splitright
@@ -314,9 +314,18 @@ silent! normal! zE
 252,260fold
 262,265fold
 329,332fold
+335,337fold
 334,337fold
 334,337fold
 339,348fold
+353,356fold
+353,356fold
+358,364fold
+366,367fold
+371,376fold
+371,378fold
+371,378fold
+380,383fold
 389,393fold
 395,398fold
 401,410fold
@@ -328,29 +337,58 @@ silent! normal! zE
 447,450fold
 496,504fold
 508,520fold
+507,521fold
 506,521fold
+554,563fold
+568,571fold
+573,575fold
+568,575fold
+577,584fold
+566,587fold
+590,597fold
+590,597fold
+600,610fold
+600,610fold
+613,621fold
+624,626fold
+624,626fold
+629,647fold
+652,654fold
+656,658fold
+656,658fold
+660,668fold
+650,670fold
+743,784fold
+787,789fold
+786,789fold
 792,797fold
 799,809fold
 799,809fold
 812,829fold
-917,922fold
-926,928fold
-925,946fold
-925,946fold
-949,954fold
-957,980fold
-983,985fold
-988,993fold
-995,998fold
-1001,1006fold
-1089,1095fold
-1098,1100fold
-1098,1100fold
-1120,1123fold
-1119,1123fold
-1126,1133fold
-1154,1157fold
-1160,1167fold
+835,846fold
+918,923fold
+927,929fold
+926,947fold
+926,947fold
+950,955fold
+958,981fold
+984,986fold
+989,994fold
+989,994fold
+996,999fold
+1002,1007fold
+1010,1017fold
+1019,1028fold
+1092,1098fold
+1101,1103fold
+1101,1103fold
+1123,1126fold
+1122,1126fold
+1129,1136fold
+1157,1160fold
+1163,1170fold
+1195,1199fold
+1202,1211fold
 1
 normal zc
 88
@@ -368,10 +406,36 @@ normal zc
 334
 normal zo
 334
+normal zo
+335
 normal zc
 334
 normal zo
+334
+normal zo
 339
+normal zc
+353
+normal zo
+353
+normal zc
+353
+normal zo
+358
+normal zc
+366
+normal zc
+371
+normal zo
+371
+normal zo
+371
+normal zo
+371
+normal zc
+371
+normal zo
+380
 normal zc
 389
 normal zc
@@ -399,10 +463,74 @@ normal zo
 normal zc
 506
 normal zo
+507
+normal zo
 508
 normal zc
-506
+507
 normal zc
+506
+normal zo
+554
+normal zc
+566
+normal zo
+568
+normal zo
+568
+normal zc
+573
+normal zc
+568
+normal zc
+577
+normal zc
+566
+normal zc
+590
+normal zo
+590
+normal zc
+590
+normal zo
+600
+normal zo
+600
+normal zc
+600
+normal zo
+613
+normal zc
+624
+normal zo
+624
+normal zc
+624
+normal zo
+629
+normal zc
+650
+normal zo
+652
+normal zc
+656
+normal zo
+656
+normal zc
+656
+normal zo
+660
+normal zc
+650
+normal zc
+743
+normal zc
+786
+normal zo
+787
+normal zc
+786
+normal zo
 792
 normal zc
 799
@@ -413,55 +541,69 @@ normal zc
 normal zo
 812
 normal zc
-917
+835
 normal zc
-925
-normal zo
-925
+918
+normal zc
+926
 normal zo
 926
-normal zc
-925
-normal zc
-925
 normal zo
-949
+927
 normal zc
-957
+926
 normal zc
-983
-normal zc
-988
-normal zc
-995
-normal zc
-1001
-normal zc
-1089
-normal zc
-1098
+926
 normal zo
-1098
+950
 normal zc
-1098
+958
+normal zc
+984
+normal zc
+989
 normal zo
-1119
+989
+normal zc
+989
 normal zo
-1120
+996
 normal zc
-1119
+1002
+normal zc
+1010
+normal zc
+1019
+normal zc
+1092
+normal zc
+1101
 normal zo
-1126
+1101
 normal zc
-1154
+1101
+normal zo
+1122
+normal zo
+1123
 normal zc
-1160
+1122
+normal zo
+1129
 normal zc
-let s:l = 1447 - ((33 * winheight(0) + 17) / 34)
+1157
+normal zc
+1163
+normal zc
+1195
+normal zc
+1202
+normal zc
+let s:l = 1301 - ((33 * winheight(0) + 17) / 34)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-1447
+1301
 normal! 0
 wincmd w
 argglobal
@@ -569,8 +711,15 @@ silent! normal! zE
 198,201fold
 198,201fold
 343,348fold
+350,352fold
 349,352fold
 354,365fold
+389,391fold
+393,397fold
+399,400fold
+404,410fold
+404,410fold
+412,414fold
 421,432fold
 433,447fold
 450,456fold
@@ -579,15 +728,33 @@ silent! normal! zE
 469,472fold
 474,479fold
 480,483fold
+515,525fold
+529,531fold
+533,534fold
+529,534fold
+536,542fold
+527,545fold
+547,556fold
+558,567fold
+569,579fold
+581,583fold
 581,583fold
 580,584fold
 586,596fold
 599,611fold
 597,612fold
+614,634fold
+638,639fold
+642,647fold
+641,647fold
+636,649fold
+651,694fold
+696,698fold
 700,707fold
 709,718fold
 709,718fold
 720,739fold
+744,753fold
 835,841fold
 844,845fold
 843,861fold
@@ -595,13 +762,18 @@ silent! normal! zE
 872,890fold
 892,896fold
 898,903fold
+898,903fold
 905,909fold
 911,916fold
+918,927fold
+929,939fold
 1009,1016fold
 1018,1020fold
 1022,1027fold
 1029,1036fold
 1038,1043fold
+1054,1060fold
+1062,1069fold
 1
 normal zc
 60
@@ -625,8 +797,26 @@ normal zo
 343
 normal zc
 349
+normal zo
+350
 normal zc
+349
+normal zo
 354
+normal zc
+389
+normal zc
+393
+normal zc
+399
+normal zc
+404
+normal zo
+404
+normal zc
+404
+normal zo
+412
 normal zc
 421
 normal zc
@@ -644,8 +834,34 @@ normal zc
 normal zc
 480
 normal zc
+515
+normal zc
+527
+normal zo
+529
+normal zo
+529
+normal zc
+533
+normal zc
+529
+normal zc
+536
+normal zc
+527
+normal zc
+547
+normal zc
+558
+normal zc
+569
+normal zc
 580
 normal zo
+581
+normal zo
+581
+normal zc
 581
 normal zo
 580
@@ -658,6 +874,24 @@ normal zo
 normal zc
 597
 normal zc
+614
+normal zc
+636
+normal zo
+638
+normal zc
+641
+normal zo
+642
+normal zo
+641
+normal zc
+636
+normal zc
+651
+normal zc
+696
+normal zc
 700
 normal zc
 709
@@ -667,6 +901,8 @@ normal zc
 709
 normal zo
 720
+normal zc
+744
 normal zc
 835
 normal zc
@@ -683,10 +919,18 @@ normal zc
 892
 normal zc
 898
+normal zo
+898
 normal zc
+898
+normal zo
 905
 normal zc
 911
+normal zc
+918
+normal zc
+929
 normal zc
 1009
 normal zc
@@ -698,11 +942,15 @@ normal zc
 normal zc
 1038
 normal zc
-let s:l = 1183 - ((33 * winheight(0) + 17) / 34)
+1054
+normal zc
+1062
+normal zc
+let s:l = 1004 - ((0 * winheight(0) + 17) / 34)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-1183
+1004
 normal! 0
 wincmd w
 exe '1resize ' . ((&lines * 34 + 35) / 71)

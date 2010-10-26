@@ -197,7 +197,7 @@ if expand('%') == '' && !&modified && line('$') <= 1 && getline(1) == ''
   let s:wipebuf = bufnr('%')
 endif
 set shortmess=aoO
-badd +1 hal.c
+badd +784 hal.c
 badd +1 ../rum/hal.c
 args hal.c ../rum/hal.c
 edit hal.c
@@ -308,96 +308,372 @@ setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
 1,45fold
-315,323fold
-325,351fold
-325,351fold
-353,361fold
-363,397fold
-399,419fold
-422,432fold
-434,449fold
-543,548fold
-552,560fold
-562,573fold
-550,588fold
-591,598fold
-591,598fold
-590,598fold
-600,627fold
-600,627fold
-600,627fold
-600,627fold
-629,637fold
-639,665fold
-667,669fold
-670,676fold
+47,63fold
+71,85fold
+140,153fold
+155,156fold
+160,162fold
+160,162fold
+164,166fold
+164,166fold
+164,168fold
+164,168fold
+164,168fold
+159,179fold
+182,184fold
+187,199fold
+202,207fold
+210,212fold
+219,223fold
+159,224fold
+158,224fold
+158,224fold
+317,325fold
+328,353fold
+327,353fold
+327,353fold
+355,363fold
+366,399fold
+365,399fold
+401,421fold
+424,434fold
+438,451fold
+436,451fold
+454,463fold
+477,480fold
+477,480fold
+482,485fold
+482,485fold
+496,498fold
+526,530fold
+534,538fold
+466,542fold
+545,550fold
+554,562fold
+564,575fold
+553,590fold
+553,590fold
+552,590fold
+593,600fold
+593,600fold
+592,600fold
+604,606fold
+604,607fold
+608,611fold
+613,617fold
+619,626fold
+603,629fold
+602,629fold
+602,629fold
+602,629fold
+602,629fold
+631,639fold
+643,645fold
+647,650fold
+647,650fold
+647,650fold
+652,655fold
+652,655fold
+657,664fold
+642,667fold
+641,667fold
+669,674fold
+669,674fold
+676,680fold
+681,686fold
+688,692fold
+688,692fold
+688,692fold
+688,692fold
+687,692fold
+694,696fold
+702,703fold
+697,703fold
+694,703fold
+694,703fold
+706,709fold
+710,713fold
+721,726fold
+715,735fold
+743,745fold
+740,751fold
+771,776fold
+771,776fold
 1
 normal zc
-315
+47
 normal zc
-325
+71
+normal zc
+140
+normal zc
+155
+normal zc
+158
 normal zo
-325
-normal zc
-325
+158
 normal zo
-353
-normal zc
-363
-normal zc
-399
-normal zc
-422
-normal zc
-434
-normal zc
-543
-normal zc
-550
+159
 normal zo
+159
+normal zo
+160
+normal zo
+160
+normal zc
+160
+normal zo
+164
+normal zo
+164
+normal zo
+164
+normal zo
+164
+normal zo
+164
+normal zo
+164
+normal zo
+164
+normal zo
+164
+normal zo
+164
+normal zo
+159
+normal zc
+182
+normal zc
+187
+normal zc
+202
+normal zc
+210
+normal zc
+219
+normal zc
+159
+normal zo
+158
+normal zc
+158
+normal zo
+317
+normal zc
+327
+normal zo
+327
+normal zo
+328
+normal zc
+327
+normal zo
+327
+normal zo
+355
+normal zc
+365
+normal zo
+366
+normal zc
+365
+normal zo
+401
+normal zc
+424
+normal zc
+436
+normal zo
+438
+normal zc
+436
+normal zo
+454
+normal zc
+466
+normal zo
+477
+normal zo
+477
+normal zc
+477
+normal zo
+482
+normal zo
+482
+normal zc
+482
+normal zo
+496
+normal zc
+526
+normal zc
+534
+normal zc
+466
+normal zc
+545
+normal zc
 552
+normal zo
+553
+normal zo
+553
+normal zo
+554
 normal zc
-562
+564
 normal zc
-550
+553
 normal zc
-590
-normal zo
-591
-normal zo
-591
+553
 normal zc
-591
+552
 normal zo
-590
+592
 normal zo
-600
+593
 normal zo
-600
-normal zo
-600
-normal zo
-600
-normal zo
-600
-normal zo
-600
-normal zo
-600
-normal zo
-629
+593
 normal zc
-639
+593
+normal zo
+592
+normal zo
+602
+normal zo
+602
+normal zo
+602
+normal zo
+602
+normal zo
+603
+normal zo
+604
+normal zo
+604
 normal zc
-667
+604
+normal zo
+608
 normal zc
-670
+613
 normal zc
-let s:l = 1 - ((0 * winheight(0) + 17) / 34)
+619
+normal zc
+603
+normal zc
+602
+normal zo
+602
+normal zo
+602
+normal zo
+602
+normal zo
+631
+normal zc
+641
+normal zo
+642
+normal zo
+643
+normal zc
+647
+normal zo
+647
+normal zo
+647
+normal zc
+647
+normal zc
+647
+normal zc
+652
+normal zo
+652
+normal zc
+652
+normal zo
+657
+normal zc
+642
+normal zc
+641
+normal zo
+669
+normal zo
+669
+normal zc
+669
+normal zo
+676
+normal zc
+681
+normal zc
+687
+normal zo
+688
+normal zo
+688
+normal zo
+688
+normal zo
+688
+normal zo
+688
+normal zo
+688
+normal zo
+688
+normal zo
+687
+normal zo
+694
+normal zo
+694
+normal zo
+694
+normal zo
+697
+normal zo
+702
+normal zc
+697
+normal zo
+694
+normal zo
+694
+normal zo
+706
+normal zc
+710
+normal zc
+715
+normal zo
+721
+normal zc
+715
+normal zc
+740
+normal zo
+743
+normal zo
+740
+normal zc
+771
+normal zo
+771
+normal zc
+771
+normal zo
+let s:l = 226 - ((89 * winheight(0) + 17) / 34)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-1
+226
 normal! 0
 wincmd w
 argglobal
@@ -497,6 +773,12 @@ setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
 1,31fold
+47,62fold
+77,90fold
+92,94fold
+97,99fold
+97,102fold
+116,141fold
 115,141fold
 143,151fold
 152,185fold
@@ -506,24 +788,73 @@ silent! normal! zE
 187,206fold
 208,219fold
 220,235fold
+237,244fold
+254,257fold
+259,262fold
+269,272fold
+274,282fold
+284,286fold
+293,298fold
+287,300fold
+246,302fold
 304,310fold
 313,321fold
 323,330fold
+313,347fold
+312,347fold
 311,347fold
 349,357fold
+360,362fold
+360,362fold
+364,368fold
+370,374fold
+376,384fold
+359,387fold
 358,387fold
 358,387fold
 358,387fold
 389,397fold
 389,397fold
+400,402fold
+404,407fold
+409,413fold
+415,422fold
+415,424fold
+399,427fold
 398,427fold
 398,427fold
 429,430fold
 431,437fold
+440,441fold
+443,444fold
+446,448fold
+461,463fold
+458,469fold
+475,480fold
+608,613fold
+615,619fold
+622,627fold
+629,633fold
 1
 normal zc
-115
+47
 normal zc
+77
+normal zc
+92
+normal zc
+97
+normal zo
+97
+normal zc
+97
+normal zc
+115
+normal zo
+116
+normal zc
+115
+normal zo
 143
 normal zc
 152
@@ -544,16 +875,46 @@ normal zo
 normal zc
 220
 normal zc
+237
+normal zc
+246
+normal zo
+254
+normal zc
+259
+normal zc
+269
+normal zc
+274
+normal zc
+284
+normal zc
+287
+normal zo
+293
+normal zc
+287
+normal zc
+246
+normal zc
 304
 normal zc
 311
 normal zo
+312
+normal zo
 313
-normal zc
+normal zo
+313
+normal zo
 323
 normal zc
-311
+313
+normal zo
+312
 normal zc
+311
+normal zo
 349
 normal zc
 358
@@ -562,6 +923,24 @@ normal zo
 normal zo
 358
 normal zo
+359
+normal zo
+360
+normal zo
+360
+normal zc
+360
+normal zo
+364
+normal zc
+370
+normal zc
+376
+normal zc
+359
+normal zc
+358
+normal zo
 358
 normal zo
 358
@@ -575,18 +954,58 @@ normal zo
 398
 normal zo
 398
+normal zo
+399
+normal zo
+400
 normal zc
+404
+normal zc
+409
+normal zc
+415
+normal zo
+415
+normal zc
+415
+normal zc
+399
+normal zc
+398
+normal zo
 398
 normal zo
 429
 normal zc
 431
 normal zc
-let s:l = 1 - ((0 * winheight(0) + 17) / 34)
+440
+normal zc
+443
+normal zc
+446
+normal zo
+458
+normal zo
+461
+normal zo
+458
+normal zc
+475
+normal zc
+608
+normal zc
+615
+normal zc
+622
+normal zc
+629
+normal zc
+let s:l = 237 - ((51 * winheight(0) + 17) / 34)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-1
+237
 normal! 0
 wincmd w
 exe '1resize ' . ((&lines * 34 + 35) / 71)

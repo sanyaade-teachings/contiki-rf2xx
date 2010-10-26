@@ -349,9 +349,9 @@ radio_get_operating_channel(void) /* PORTREF: line 349 */
 radio_status_t
 radio_set_operating_channel(uint8_t channel) /* PORTREF: line 366 */
 {
-    /*Do function parameter and state check.*/
-    if ((channel < RF230_MIN_CHANNEL) ||
-        (channel > RF230_MAX_CHANNEL)){
+    /* Do function parameter and state check. */
+    if ((channel < MIN_CHANNEL) ||
+        (channel > MAX_CHANNEL)){
         return RADIO_INVALID_ARGUMENT;
     }
 
@@ -363,7 +363,7 @@ radio_set_operating_channel(uint8_t channel) /* PORTREF: line 366 */
         return RADIO_SUCCESS;
     }
 
-    /*Set new operating channel.*/
+    /* Set new operating channel. */
     hal_subregister_write(SR_CHANNEL, channel);
 
     /* Read current state and wait for the PLL_LOCK interrupt if the */
@@ -562,10 +562,10 @@ radio_batmon_get_voltage_range(void)
  *                               bounds (Not within [0 - 15]).
  */
 radio_status_t
-radio_batmon_configure(bool range, uint8_t voltage_threshold)
+radio_batmon_configure(bool range, uint8_t voltage_threshold) /* PORTREF: line 526 */
 {
 
-    /*Check function parameters and state.*/
+    /* Check function parameters and state. */
     if (voltage_threshold > BATTERY_MONITOR_HIGHEST_VOLTAGE){
         return RADIO_INVALID_ARGUMENT;
     }
@@ -574,7 +574,7 @@ radio_batmon_configure(bool range, uint8_t voltage_threshold)
         return RADIO_WRONG_STATE;
     }
 
-    /*Write new voltage range and voltage level.*/
+    /* Write new voltage range and voltage level. */
     if (range == true){
         hal_subregister_write(SR_BATMON_HR, BATTERY_MONITOR_HIGH_VOLTAGE);
     } else {
@@ -596,7 +596,7 @@ radio_batmon_configure(bool range, uint8_t voltage_threshold)
  *  \retval RADIO_BAT_OK Battery voltage is above the programmed threshold.
  */
 radio_status_t
-radio_batmon_get_status(void)
+radio_batmon_get_status(void) /* PORTREF: line 557 */
 {
 
     radio_status_t batmon_status = RADIO_BAT_LOW;
@@ -620,7 +620,7 @@ radio_batmon_get_status(void)
  *  \retval CLKM_16MHZ CLKM pin is not prescaled. Output is 16 MHz.
  */
 uint8_t
-radio_get_clock_speed(void)
+radio_get_clock_speed(void) /* PORTREF: line 580 */
 {
     return hal_subregister_read(SR_CLKM_CTRL);
 }
@@ -646,25 +646,25 @@ radio_get_clock_speed(void)
  *  \retval RADIO_INVALID_ARGUMENT Requested clock speed is out of bounds.
  */
 radio_status_t
-radio_set_clock_speed(bool direct, uint8_t clock_speed)
+radio_set_clock_speed(bool direct, uint8_t clock_speed) /* PORTREF: line 635 */
 {
-        /*Check function parameter and current clock speed.*/
+    /* Check function parameter and current clock speed. */
     if (clock_speed > CLKM_16MHZ){
             return RADIO_INVALID_ARGUMENT;
     }
 
-    if (radio_get_clock_speed() == clock_speed){
+    if (radio_get_clock_speed() == clock_speed){ /* PORTNOTE: That's a good thing to do here! */
         return RADIO_SUCCESS;
     }
 
-        /*Select to change the CLKM frequency directly or after returning from SLEEP.*/
+    /* Select to change the CLKM frequency directly or after returning from SLEEP. */
     if (direct == false){
             hal_subregister_write(SR_CLKM_SHA_SEL, 1);
     } else {
             hal_subregister_write(SR_CLKM_SHA_SEL, 0);
     }
         
-        hal_subregister_write(SR_CLKM_CTRL, clock_speed);
+    hal_subregister_write(SR_CLKM_CTRL, clock_speed);
 
     return RADIO_SUCCESS;
 }
@@ -783,7 +783,7 @@ radio_calibrate_pll(void)
  *                                 transition between two states.
  */
 uint8_t
-radio_get_trx_state(void)
+radio_get_trx_state(void) /* PORTREF: line 695 */
 {
     return hal_subregister_read(SR_TRX_STATUS);
 }
@@ -832,7 +832,7 @@ radio_set_trx_state(uint8_t new_state) /* PORTREF: line 740 */
 {
     uint8_t original_state;
 
-    /*Check function paramter and current state of the radio transceiver.*/
+    /* Check function paramter and current state of the radio transceiver. */
     if (!((new_state == TRX_OFF)    ||
           (new_state == RX_ON)      ||
           (new_state == PLL_ON)     ||
@@ -845,8 +845,8 @@ radio_set_trx_state(uint8_t new_state) /* PORTREF: line 740 */
         return RADIO_WRONG_STATE;
     }
 
-    // Wait for radio to finish previous operation
-    for(;;)
+    /* Wait for radio to finish previous operation. */
+    for(;;) 						/* PORTNOTE: Atmel defines radioIsBusy(). */
     {
         original_state = radio_get_trx_state();
         if (original_state != BUSY_TX_ARET &&
@@ -902,7 +902,8 @@ radio_set_trx_state(uint8_t new_state) /* PORTREF: line 740 */
 
     if (radio_get_trx_state() == new_state){
         set_state_status = RADIO_SUCCESS;
-        /*  set rx_mode flag based on mode we're changing to */
+        /* set rx_mode flag based on mode we're changing to */
+	/* TODO: This has to be looked at ... */
         if (new_state == RX_ON ||
             new_state == RX_AACK_ON){
             rx_mode = true;
@@ -1015,8 +1016,10 @@ radio_reset_trx(void) /* PORTREF: line 910 */
  *                      false, the automatic CRC will be disabled.
  */
 void
-radio_use_auto_tx_crc(bool auto_crc_on)
-{
+radio_use_auto_tx_crc(bool auto_crc_on) /* PORTREF: line 928 */
+{					/* PORTNOTE: SR_TX_AUTO_CRC_ON has to be defined correctly in the header! */
+					/* IF WE WERE TO USE IT WITH DIFFERENT RADIOS, THEN - YES, DO LIKE ATMEL. */
+					/* (that way we wouldn't need to recompile it every time for every radio) */
     if (auto_crc_on == true){
         hal_subregister_write(SR_TX_AUTO_CRC_ON, 1);
     } else {
@@ -1195,8 +1198,8 @@ radio_get_extended_address(uint8_t *extended_address)
  *  \param  extended_address Extended address to be used by the address filter.
  */
 void
-radio_set_extended_address(uint8_t *extended_address)
-{
+radio_set_extended_address(uint8_t *extended_address) /* PORTREF: line 1061 */
+{								/* PORTNOTE: Atmel uses a loop here. */
     hal_register_write(RG_IEEE_ADDR_0, *extended_address++);
     hal_register_write(RG_IEEE_ADDR_1, *extended_address++);
     hal_register_write(RG_IEEE_ADDR_2, *extended_address++);

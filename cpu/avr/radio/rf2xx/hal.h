@@ -86,10 +86,10 @@ typedef int64_t s64;
 */
 
 #ifdef ATMEL_RADIO == RF23x
-#define RADIOBAND 2400
+#define RADIOBAND B2400
 #include "at86rf23x_registermap.h"
 #ifdef ATMEL_RADIO == RF212
-#define RADIOBAND 900
+#define RADIOBAND B900
 #include "at86rf212_registermap.h"
 #else
 #error "Please define ATMEL_RADIO, use RF23x or RF212"
