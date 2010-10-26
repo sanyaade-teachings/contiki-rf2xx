@@ -18,6 +18,8 @@ snoremap % b<BS>%
 snoremap ' b<BS>'
 map Q gq
 snoremap U b<BS>U
+nmap <silent> \t@ :AlignCtrl mIp1P1=l @:'a,.Align
+nmap <silent> \aocom :AlignPush:AlignCtrl g /[*/]\acom:AlignPop
 snoremap \ b<BS>\
 nmap \sv <Plug>SVNVimDiff
 nmap \su <Plug>SVNUpdate
@@ -96,9 +98,7 @@ vmap <silent> \T, :<BS><BS><BS>ma'>\T,
 vmap <silent> \T| :<BS><BS><BS>ma'>\T|
 map <silent> \tdW@ :AlignCtrl v ^\s*/[/*]:AlignCtrl mWp1P1=l @:'a,.Align
 map <silent> \tW@ :AlignCtrl mWp1P1=l @:'a,.Align
-nmap <silent> \t@ :AlignCtrl mIp1P1=l @:'a,.Align
 omap <silent> \t@ :AlignCtrl mIp1P1=l @:'a,.Align
-nmap <silent> \aocom :AlignPush:AlignCtrl g /[*/]\acom:AlignPop
 omap <silent> \aocom :AlignPush:AlignCtrl g /[*/]\acom:AlignPop
 nmap \rx <Plug>Rx
 nmap \ri <Plug>Ri
@@ -197,8 +197,8 @@ if expand('%') == '' && !&modified && line('$') <= 1 && getline(1) == ''
   let s:wipebuf = bufnr('%')
 endif
 set shortmess=aoO
-badd +1 hal.h
-badd +0 ../rum/hal.h
+badd +217 hal.h
+badd +1 ../rum/hal.h
 args hal.h ../rum/hal.h
 edit hal.h
 set splitbelow splitright
@@ -308,14 +308,38 @@ setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
 1,43fold
+59,67fold
+69,86fold
+88,96fold
+216,222fold
+223,252fold
+260,273fold
+328,333fold
+336,344fold
 1
 normal zc
-let s:l = 333 - ((1 * winheight(0) + 17) / 34)
+59
+normal zc
+69
+normal zc
+88
+normal zc
+216
+normal zc
+223
+normal zc
+260
+normal zc
+328
+normal zc
+336
+normal zc
+let s:l = 88 - ((87 * winheight(0) + 17) / 34)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-333
-normal! 0
+88
+normal! 011l
 wincmd w
 argglobal
 2argu
@@ -414,13 +438,39 @@ setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
 1,31fold
+34,42fold
+583,589fold
+583,589fold
+593,601fold
+602,631fold
+637,650fold
+720,727fold
+767,771fold
 1
 normal zc
-let s:l = 814 - ((26 * winheight(0) + 17) / 34)
+34
+normal zc
+583
+normal zo
+583
+normal zc
+583
+normal zo
+593
+normal zc
+602
+normal zc
+637
+normal zc
+720
+normal zc
+767
+normal zc
+let s:l = 583 - ((18 * winheight(0) + 17) / 34)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-814
+583
 normal! 0
 wincmd w
 exe '1resize ' . ((&lines * 34 + 35) / 71)

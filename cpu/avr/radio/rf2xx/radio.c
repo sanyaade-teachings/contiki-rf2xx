@@ -100,10 +100,11 @@ typedef enum{
     TIME_PLL_LOCK                    = 150, /**<  Maximum time it should take for the PLL to lock. */
     TIME_FTN_TUNING                  = 25,  /**<  Maximum time it should take to do the filter tuning. */
     TIME_NOCLK_TO_WAKE               = 6,   /**<  Transition time from *_NOCLK to being awake. */
-    TIME_CMD_FORCE_TRX_OFF           = 1,    /**<  Time it takes to execute the FORCE_TRX_OFF command. */
+    TIME_CMD_FORCE_TRX_OFF           = 1,   /**<  Time it takes to execute the FORCE_TRX_OFF command. */
     TIME_TRX_OFF_TO_PLL_ACTIVE       = 180, /**<  Transition time from TRX_OFF to: RX_ON, PLL_ON, TX_ARET_ON and RX_AACK_ON. */
-    TIME_STATE_TRANSITION_PLL_ACTIVE = 1, /**<  Transition time from PLL active state to another. */
-}radio_trx_timing_t;
+    TIME_STATE_TRANSITION_PLL_ACTIVE = 1,   /**<  Transition time from PLL active state to another. */
+    TIME_RESET_TRX_OFF               = 37,  /**<  Transition time from RESET to TRX_OFF. */
+}radio_trx_timing_t; /* PORTREF: line 79 */
 
 /*============================ VARIABLES =====================================*/
 static hal_rx_start_isr_event_handler_t user_rx_event;
@@ -226,8 +227,18 @@ radio_frame_length(void)
 }
 
 /*---------------------------------------------------------------------------*/
+/**\brief Callback function, called when the radio receives an RX_START interrupt.
+ *        This function reads the radio's RSSI reading for the frame that is being received.
+ *
+ * \note This function is called from an interrupt - beware of re-entrancy problems.
+ *
+ * \param isr_timestamp ISR timestamp.
+ *
+ * \param frame_length The length of the frame that is being received.
+ *
+ */
 static void
-radio_rx_start_event(uint32_t const isr_timestamp, uint8_t const frame_length)
+radio_rx_start_event(uint32_t const isr_timestamp, uint8_t const frame_length) /* PORTREF: line 180 */
 {
     /*  save away RSSI */
     rssi_val =  hal_subregister_read( SR_RSSI );
@@ -238,8 +249,17 @@ radio_rx_start_event(uint32_t const isr_timestamp, uint8_t const frame_length)
 }
 
 /*---------------------------------------------------------------------------*/
+/**\brief Retrieves the saved RSSI (Received Signal Strength Indication) value.
+ * 	The value returned is the RSSI at the time of the RX_START interrupt.
+ *
+ * \return The RSSI value, which ranges from 0 to 28,
+ *		and can be used to calculate the RSSI in dBm:
+ *
+ *	Input Signal Strength (in dBm) = -90dBm + (3 * RSSI - 1)
+ *
+ */
 uint8_t
-radio_get_saved_rssi_value(void)
+radio_get_saved_rssi_value(void) /* PORTREF: line 198 */
 {
     return rssi_val;
 }
@@ -311,7 +331,7 @@ radio_trx_end_event(uint32_t const isr_timestamp)
  *  \return Current channel, 11 to 26.
  */
 uint8_t
-radio_get_operating_channel(void)
+radio_get_operating_channel(void) /* PORTREF: line 349 */
 {
     return hal_subregister_read(SR_CHANNEL);
 }
@@ -327,7 +347,7 @@ radio_get_operating_channel(void)
  *  \retval RADIO_TIMED_OUT The PLL did not lock within the specified time.
  */
 radio_status_t
-radio_set_operating_channel(uint8_t channel)
+radio_set_operating_channel(uint8_t channel) /* PORTREF: line 366 */
 {
     /*Do function parameter and state check.*/
     if ((channel < RF230_MIN_CHANNEL) ||
@@ -372,7 +392,7 @@ radio_set_operating_channel(uint8_t channel)
  *          the radio transceiver's datasheet
  */
 uint8_t
-radio_get_tx_power_level(void)
+radio_get_tx_power_level(void) /* PORTREF: line 457 */
 {
     return hal_subregister_read(SR_TX_PWR);
 }
@@ -389,7 +409,7 @@ radio_get_tx_power_level(void)
  *                          device is sleeping.
  */
 radio_status_t
-radio_set_tx_power_level(uint8_t power_level)
+radio_set_tx_power_level(uint8_t power_level) /* PORTREF: line 433 */
 {
 
     /*Check function parameter and state.*/
@@ -413,7 +433,7 @@ radio_set_tx_power_level(uint8_t power_level)
  *  \return CCA mode currently used, 0 to 3.
  */
 uint8_t
-radio_get_cca_mode(void)
+radio_get_cca_mode(void) /* PORTREF: line 468 */
 {
     return hal_subregister_read(SR_CCA_MODE);
 }
@@ -424,7 +444,7 @@ radio_get_cca_mode(void)
  *  \return Current ED threshold, 0 to 15.
  */
 uint8_t
-radio_get_ed_threshold(void)
+radio_get_ed_threshold(void) /* PORTREF: line 480 */
 {
     return hal_subregister_read(SR_CCA_ED_THRES);
 }
@@ -483,7 +503,7 @@ radio_set_cca_mode(uint8_t mode, uint8_t ed_threshold)
  *  \retval RADIO_WRONG_STATE The radio transceiver is not in RX_ON or BUSY_RX.
  */
 radio_status_t
-radio_get_rssi_value(uint8_t *rssi)
+radio_get_rssi_value(uint8_t *rssi) /* PORTREF: line 597 */
 {
 
     uint8_t current_state = radio_get_trx_state();
@@ -491,7 +511,8 @@ radio_get_rssi_value(uint8_t *rssi)
 
     /*The RSSI measurement should only be done in RX_ON or BUSY_RX.*/
     if ((current_state == RX_ON) ||
-        (current_state == BUSY_RX)){
+        (current_state == BUSY_RX))
+    {
         *rssi = hal_subregister_read(SR_RSSI);
         retval = RADIO_SUCCESS;
     }
@@ -774,7 +795,7 @@ radio_get_trx_state(void)
  *                      states.
  *  \retval     false   The radio transceiver is not sleeping.
  */
-bool radio_is_sleeping(void)
+bool radio_is_sleeping(void) /* PORTREF: line 708 */
 {
     bool sleeping = false;
 
@@ -807,7 +828,7 @@ bool radio_is_sleeping(void)
  *                                  within resonable time.
  */
 radio_status_t
-radio_set_trx_state(uint8_t new_state)
+radio_set_trx_state(uint8_t new_state) /* PORTREF: line 740 */
 {
     uint8_t original_state;
 
@@ -900,13 +921,15 @@ radio_set_trx_state(uint8_t new_state)
  *  \retval    RADIO_TIMED_OUT        The transition to TRX_OFF took too long.
  */
 radio_status_t
-radio_enter_sleep_mode(void)
+radio_enter_sleep_mode(void) /* PORTREF: line 842 */
 {
     if (radio_is_sleeping() == true){
         return RADIO_SUCCESS;
     }
 
     radio_reset_state_machine(); /* Force the device into TRX_OFF. */
+
+    delay_us(TIME_RESET_TRX_OFF);
 
     radio_status_t enter_sleep_status = RADIO_TIMED_OUT;
 
@@ -930,7 +953,7 @@ radio_enter_sleep_mode(void)
  *  \retval    RADIO_TIMED_OUT        Transition to TRX_OFF state timed out.
  */
 radio_status_t
-radio_leave_sleep_mode(void)
+radio_leave_sleep_mode(void) /* PORTREF: line 871 */
 {
     /* Check if the radio transceiver is actually sleeping. */
     if (radio_is_sleeping() == false){
@@ -941,6 +964,9 @@ radio_leave_sleep_mode(void)
     delay_us(TIME_SLEEP_TO_TRX_OFF);
 
     radio_status_t leave_sleep_status = RADIO_TIMED_OUT;
+
+    /* Ensure CLKM is OFF. */
+    radio_set_clock_speed(true, CLKM_DISABLED);
 
     /* Ensure that the radio transceiver is in the TRX_OFF state. */
     if (radio_get_trx_state() == TRX_OFF){
@@ -958,7 +984,7 @@ radio_leave_sleep_mode(void)
  *          its states, except for the SLEEP state.
  */
 void
-radio_reset_state_machine(void)
+radio_reset_state_machine(void) /* PORTREF: line 897 */
 {
     hal_set_slptr_low();
     delay_us(TIME_NOCLK_TO_WAKE);
@@ -971,7 +997,7 @@ radio_reset_state_machine(void)
  *          the radio transceiver.
  */
 void
-radio_reset_trx(void)
+radio_reset_trx(void) /* PORTREF: line 910 */
 {
     hal_set_rst_low();
     hal_set_slptr_low();
@@ -1068,7 +1094,7 @@ radio_get_device_role(void)
  *                              False disables the same feature.
  */
 void
-radio_set_device_role(bool i_am_coordinator)
+radio_set_device_role(bool i_am_coordinator) /* PORTREF: line 1017 */
 {
     hal_subregister_write(SR_I_AM_COORD, i_am_coordinator);
 }
@@ -1096,7 +1122,7 @@ radio_get_pan_id(void)
  *  \param  new_pan_id Desired PANID. Can be any value from 0x0000 to 0xFFFF
  */
 void
-radio_set_pan_id(uint16_t new_pan_id)
+radio_set_pan_id(uint16_t new_pan_id) /* PORTREF: line 1028 */
 {
 
     uint8_t pan_byte = new_pan_id & 0xFF; /*  Extract new_pan_id_7_0. */
@@ -1130,7 +1156,7 @@ radio_get_short_address(void)
  *  \param  new_short_address Short address to be used by the address filter.
  */
 void
-radio_set_short_address(uint16_t new_short_address)
+radio_set_short_address(uint16_t new_short_address) /* PORTREF: line 1044 */
 {
 
     uint8_t short_address_byte = new_short_address & 0xFF; /*  Extract short_address_7_0. */

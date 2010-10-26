@@ -18,6 +18,8 @@ snoremap % b<BS>%
 snoremap ' b<BS>'
 map Q gq
 snoremap U b<BS>U
+nmap <silent> \aocom :AlignPush:AlignCtrl g /[*/]\acom:AlignPop
+nmap <silent> \t@ :AlignCtrl mIp1P1=l @:'a,.Align
 snoremap \ b<BS>\
 nmap \sv <Plug>SVNVimDiff
 nmap \su <Plug>SVNUpdate
@@ -96,9 +98,7 @@ vmap <silent> \T, :<BS><BS><BS>ma'>\T,
 vmap <silent> \T| :<BS><BS><BS>ma'>\T|
 map <silent> \tdW@ :AlignCtrl v ^\s*/[/*]:AlignCtrl mWp1P1=l @:'a,.Align
 map <silent> \tW@ :AlignCtrl mWp1P1=l @:'a,.Align
-nmap <silent> \t@ :AlignCtrl mIp1P1=l @:'a,.Align
 omap <silent> \t@ :AlignCtrl mIp1P1=l @:'a,.Align
-nmap <silent> \aocom :AlignPush:AlignCtrl g /[*/]\acom:AlignPop
 omap <silent> \aocom :AlignPush:AlignCtrl g /[*/]\acom:AlignPop
 nmap \rx <Plug>Rx
 nmap \ri <Plug>Ri
@@ -197,8 +197,8 @@ if expand('%') == '' && !&modified && line('$') <= 1 && getline(1) == ''
   let s:wipebuf = bufnr('%')
 endif
 set shortmess=aoO
-badd +1 at86rf23x_registermap.h
-badd +0 ../rf230/at86rf230_registermap.h
+badd +163 at86rf23x_registermap.h
+badd +1 ../rf230/at86rf230_registermap.h
 args at86rf23x_registermap.h ../rf230/at86rf230_registermap.h
 edit at86rf23x_registermap.h
 set splitbelow splitright
@@ -312,10 +312,12 @@ silent! normal! zE
 52,61fold
 62,77fold
 62,77fold
+62,77fold
 78,91fold
 92,97fold
 78,97fold
 98,101fold
+102,109fold
 102,111fold
 98,111fold
 123,130fold
@@ -323,12 +325,34 @@ silent! normal! zE
 141,148fold
 157,162fold
 163,170fold
-247,250fold
-251,267fold
-251,267fold
-273,280fold
-283,287fold
-288,299fold
+171,176fold
+177,185fold
+186,189fold
+193,197fold
+192,197fold
+201,207fold
+208,214fold
+215,221fold
+215,221fold
+208,221fold
+222,229fold
+230,237fold
+255,258fold
+259,275fold
+259,275fold
+281,288fold
+277,289fold
+291,295fold
+296,307fold
+334,341fold
+331,342fold
+347,354fold
+344,355fold
+356,362fold
+356,367fold
+368,379fold
+381,392fold
+394,429fold
 1
 normal zc
 52
@@ -340,7 +364,11 @@ normal zo
 62
 normal zo
 62
+normal zo
+62
 normal zc
+62
+normal zo
 62
 normal zo
 78
@@ -354,11 +382,15 @@ normal zo
 98
 normal zo
 98
+normal zc
+102
 normal zo
+102
+normal zc
 102
 normal zo
 98
-normal zc
+normal zo
 123
 normal zc
 135
@@ -369,26 +401,84 @@ normal zc
 normal zc
 163
 normal zc
-247
+171
 normal zc
-251
+177
+normal zc
+186
+normal zc
+192
 normal zo
-251
-normal zc
-251
+193
 normal zo
-273
+192
 normal zc
-283
+201
 normal zc
-288
+208
+normal zo
+208
 normal zc
-let s:l = 163 - ((40 * winheight(0) + 17) / 34)
+215
+normal zo
+215
+normal zc
+215
+normal zo
+208
+normal zc
+222
+normal zc
+230
+normal zc
+255
+normal zc
+259
+normal zo
+259
+normal zc
+259
+normal zo
+277
+normal zo
+281
+normal zo
+277
+normal zc
+291
+normal zc
+296
+normal zc
+331
+normal zo
+334
+normal zc
+331
+normal zc
+344
+normal zo
+347
+normal zc
+344
+normal zc
+356
+normal zo
+356
+normal zo
+356
+normal zc
+368
+normal zc
+381
+normal zc
+394
+normal zc
+let s:l = 1 - ((0 * winheight(0) + 17) / 34)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-163
-normal! 08l
+1
+normal! 0
 wincmd w
 argglobal
 2argu
@@ -491,12 +581,15 @@ silent! normal! zE
 60,72fold
 59,72fold
 59,72fold
+59,72fold
+59,72fold
 73,86fold
 87,92fold
 73,92fold
 93,108fold
 109,112fold
 117,124fold
+113,128fold
 129,140fold
 113,142fold
 145,152fold
@@ -504,6 +597,31 @@ silent! normal! zE
 163,170fold
 171,176fold
 193,200fold
+201,208fold
+209,214fold
+215,222fold
+223,231fold
+232,235fold
+232,235fold
+236,241fold
+242,248fold
+249,255fold
+249,255fold
+249,255fold
+249,256fold
+257,262fold
+249,262fold
+249,262fold
+249,262fold
+249,262fold
+249,262fold
+263,266fold
+263,268fold
+269,272fold
+273,280fold
+281,288fold
+289,296fold
+297,328fold
 1
 normal zc
 49
@@ -512,10 +630,18 @@ normal zc
 normal zo
 59
 normal zo
+59
+normal zo
+59
+normal zo
 60
 normal zo
 59
 normal zc
+59
+normal zo
+59
+normal zo
 59
 normal zo
 73
@@ -532,12 +658,16 @@ normal zc
 normal zc
 113
 normal zo
+113
+normal zo
 117
+normal zc
+113
 normal zc
 129
 normal zc
 113
-normal zc
+normal zo
 145
 normal zc
 157
@@ -548,14 +678,83 @@ normal zc
 normal zc
 193
 normal zc
-let s:l = 193 - ((22 * winheight(0) + 17) / 34)
+201
+normal zc
+209
+normal zc
+215
+normal zc
+223
+normal zc
+232
+normal zo
+232
+normal zc
+232
+normal zo
+236
+normal zc
+242
+normal zc
+249
+normal zo
+249
+normal zo
+249
+normal zo
+249
+normal zo
+249
+normal zo
+249
+normal zo
+249
+normal zo
+249
+normal zo
+249
+normal zc
+249
+normal zo
+249
+normal zo
+249
+normal zo
+257
+normal zo
+249
+normal zc
+249
+normal zo
+249
+normal zo
+249
+normal zo
+249
+normal zo
+263
+normal zo
+263
+normal zc
+263
+normal zo
+269
+normal zc
+273
+normal zc
+281
+normal zc
+289
+normal zc
+297
+normal zc
+let s:l = 1 - ((0 * winheight(0) + 17) / 34)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-193
+1
 normal! 0
 wincmd w
-2wincmd w
 exe '1resize ' . ((&lines * 34 + 35) / 71)
 exe '2resize ' . ((&lines * 34 + 35) / 71)
 tabnext 1

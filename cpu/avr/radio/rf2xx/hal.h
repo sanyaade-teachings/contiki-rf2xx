@@ -85,6 +85,16 @@ typedef int64_t s64;
 
 */
 
+#ifdef ATMEL_RADIO == RF23x
+#define RADIOBAND 2400
+#include "at86rf23x_registermap.h"
+#ifdef ATMEL_RADIO == RF212
+#define RADIOBAND 900
+#include "at86rf212_registermap.h"
+#else
+#error "Please define ATMEL_RADIO, use RF23x or RF212"
+#endif
+
 /*============================ MACROS ========================================*/
 
 // TEST CODE
@@ -103,8 +113,8 @@ typedef int64_t s64;
 // ZIGBIT : Zigbit module from Meshnetics
 #define RAVEN_D	    4
 #define RAVENUSB_C  1
-#define RCB_B	    	2
-#define ZIGBIT			3
+#define RCB_B	    2
+#define ZIGBIT	    3
 
 
 
@@ -208,12 +218,13 @@ typedef int64_t s64;
  * assign port/pin/DDR names to various macro variables.  The
  * variables are assigned based on the specific connections made in
  * the hardware.  For example TCCR(TICKTIMER,A) can be used in place of TCCR0A
- * if TICKTIMER is defined as 0.
+ * if TICKTIMER is defined as 0. This setup allows changing which
+ * resources are used on a PCB with minimum of modifications.
  * \{
  */
-#define CAT(x, y)      x##y
-#define CAT2(x, y, z)  x##y##z
-#define DDR(x)         CAT(DDR,  x)
+#define CAT(x, y)      x##y		/**< Concatenate two strings. */
+#define CAT2(x, y, z)  x##y##z		/**< Concatenate three strings. */
+#define DDR(x)         CAT(DDR,  x)	/**< Data direction register macro. */
 #define PORT(x)        CAT(PORT, x)
 #define PIN(x)         CAT(PIN,  x)
 #define UCSR(num, let) CAT2(UCSR,num,let)
@@ -315,22 +326,22 @@ typedef int64_t s64;
 #define HAL_DISABLE_OVERFLOW_INTERRUPT( ) ( TIMSK1 &= ~( 1 << TOIE1 ) )
 
 /** This macro will protect the following code from interrupts.*/
-#define AVR_ENTER_CRITICAL_REGION( ) {uint8_t volatile saved_sreg = SREG; cli( )
+#define AVR_ENTER_CRITICAL_REGION( ) {uint8_t volatile saved_sreg = SREG; cli( )  /* PORTREF: line 723 */
 
-/** This macro must always be used in conjunction with AVR_ENTER_CRITICAL_REGION
+/** This macro must always be used in conjunction with \ref AVR_ENTER_CRITICAL_REGION
     so that interrupts are enabled again.*/
-#define AVR_LEAVE_CRITICAL_REGION( ) SREG = saved_sreg;}
+#define AVR_LEAVE_CRITICAL_REGION( ) SREG = saved_sreg;}  /* PORTREF: line 727 */
 
 
 /** \brief  Enable the interrupt from the radio transceiver.
  */
-#define hal_enable_trx_interrupt( ) HAL_ENABLE_RADIO_INTERRUPT( )
+#define hal_enable_trx_interrupt( ) HAL_ENABLE_RADIO_INTERRUPT( )  /* PORTREF: line 768 */
 
 /** \brief  Disable the interrupt from the radio transceiver.
  *
  *  \retval 0 if the pin is low, 1 if the pin is high.
  */
-#define hal_disable_trx_interrupt( ) HAL_DISABLE_RADIO_INTERRUPT( )
+#define hal_disable_trx_interrupt( ) HAL_DISABLE_RADIO_INTERRUPT( ) /* PORTREF: line 771 */
 /*============================ TYPDEFS =======================================*/
 /*============================ PROTOTYPES ====================================*/
 /*============================ MACROS ========================================*/
@@ -370,6 +381,7 @@ typedef void (*rx_callback_t) (uint16_t data);
 
 /*============================ PROTOTYPES ====================================*/
 void hal_init( void );
+void hal_spi_init(void);
 
 void hal_reset_flags( void );
 uint8_t hal_get_bat_low_flag( void );
