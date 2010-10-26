@@ -1,0 +1,5 @@
+
+The booloader.c and bootload.h in ../rum/ define the functions
+which are being called from sixlowpan_application.c
+
+How are we going to ingrate it?
