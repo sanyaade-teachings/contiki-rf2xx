@@ -42,6 +42,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+/* TODO: Doxygenize all comments correctly */
 /**
  *    \addtogroup hal
  *    @{
@@ -85,11 +86,12 @@ typedef int64_t s64;
 
 */
 
+/* TODO: adjust ATMEL_RADIO and the PLATFORM definitions below to work together */
 #ifdef ATMEL_RADIO == RF23x
-#define RADIOBAND B2400
+#define RADIO_BAND B2400
 #include "at86rf23x_registermap.h"
 #ifdef ATMEL_RADIO == RF212
-#define RADIOBAND B900
+#define RADIO_BAND B900
 #include "at86rf212_registermap.h"
 #else
 #error "Please define ATMEL_RADIO, use RF23x or RF212"
@@ -101,45 +103,317 @@ typedef int64_t s64;
 #define TRIG1 DDRB |= 0x04, PINB |= 0x04
 #define TRIG2 DDRD |= 0x80, PIND |= 0x80
 
-/** \name This is the list of pin configurations needed for a given platform.
- * \brief Change these values to port to other platforms.
+/**\name This is the list of pin configurations needed for a given platform.
+ * \brief This section is legacy, only for compatibility.
  * \{
  */
 /* Define all possible revisions here */
-// Don't use zero, it will match if undefined!
-// RAVEN_D : Raven kit with LCD display
-// RAVENUSB_C : used for USB key or Raven card 
-// RCB_B : RZ200 kit from Atmel based on 1281V
-// ZIGBIT : Zigbit module from Meshnetics
-#define RAVEN_D	    4
-#define RAVENUSB_C  1
-#define RCB_B	    2
-#define ZIGBIT	    3
+/* Don't use zero, it will match if undefined! */
+/*
+ *	#define RAVEN_D		4 //< Raven kit with LCD display
+ *	#define RAVENUSB_C	1 //< used for USB key or Raven card
+ *	#define RCB_B		2 //< RZ200 kit from Atmel based on 1281V
+ *	#define ZIGBIT		3 //< Zigbit module from Meshnetics
+*/
 
+/**
+   \name Platform types.
 
+   Note that the order of these definitions is not arbitrary, and
+   there are comparisons of the @ref PLATFORM variable based on
+   position within the list.  In other words, re-arranging the list
+   can break the code.  Feel free to add new platforms on the end of
+   the list.  Note that an RCB230 board can be loaded with an 'RF231
+   chip, and vice-versa.  The firmware identifies which radio chip is
+   loaded and acts accordingly.  The RCB230/231 distinction is in
+   which board is being used, not which chip is loaded.
 
+   @{
+*/
 
-#if RCB_REVISION == RCB_B
-/* 1281 rcb */
-#   define SSPORT     B
-#   define SSPIN      (0x00)
-#   define SPIPORT    B
-#   define MOSIPIN    (0x02)
-#   define MISOPIN    (0x03)
-#   define SCKPIN     (0x01)
-#   define RSTPORT    B
-#   define RSTPIN     (0x05)
-#   define IRQPORT    D
-#   define IRQPIN     (0x04)
-#   define SLPTRPORT  B
-#   define SLPTRPIN   (0x04)
-#   define USART      1
-#   define USARTVECT  USART1_RX_vect
-#   define TICKTIMER  3
-#   define HAS_SPARE_TIMER
+#define RCB230     1  /**< Radio control board, designed for use with RF230 */
+#define RCB231     2  /**< Radio control board, designed for use with RF231 */
+#define RCB212     3  /**< Radio control board, designed for use with RF212 (900MHz only) */
+#define RCBSIP     4  /**< Radio control board, designed for use with RF231 */
+#define RAVEN      5  /**< Raven demo board (with LCD display) [ATmega1284P] */
+#define RAVENUSB   6  /**< Raven demo board (USB version) [AT90USB1287] */
+#define SPITFIRE   7  /**< Small sensor demo board (900MHz only) */
+#define ZIGBIT09   8  /**< ZigBit module, operating in the 900MHz band */
+#define ZIGBIT24   9  /**< ZigBit module, operating in the 2.4GHz band */
+#define DSK001    10  /**< TRT Button, model DSK001 */
+/** @} */
 
-#elif HARWARE_REVISION == ZIGBIT
+/**
+   \def RADIO_BAND
+   \brief The RADIO_BAND macro is set to one particular band based
+   on which platform selected for compilation.  Do not manually set
+   this macro.
+
+   \name RF Bands supported
+
+   The \ref RADIO_BAND macro is set to one of the following two bands.
+   @{
+*/
+#define BAND900    1
+#define BAND2400   2
+/** @} */
+
+#if defined DOXYGEN
+/**
+   @brief Defines the platform for which we are building the firmware.
+   See @ref RCB230 under "Platform types" above for possible values.
+*/
+
+    #define PLATFORM RCB231
+    #define F_CPU 8000000UL
+#endif
+
+#if ( PLATFORM == RCB230 ) /* PORTREF: line 209 */
+/* RCB with ATmega1281V and RF230 (RCB rev B) */
+
+	#ifndef __AVR_ATmega1281__
+		#error "Incorrect MCU for Platform! Check Makefile"
+	#endif
+
+	/* SPI */
+	#   define SSPORT     B
+	#   define SSPIN      (0x00)
+	#   define SPIPORT    B
+	#   define MOSIPIN    (0x02)
+	#   define MISOPIN    (0x03)
+	#   define SCKPIN     (0x01)
+	/* RST */
+	#   define RSTPORT    B
+	#   define RSTPIN     (0x05)
+	/* SLP */
+	#   define SLPTRPORT  B
+	#   define SLPTRPIN   (0x04)
+	/* TMR */
+	#   define TICKTIMER  3
+	#   define HAS_SPARE_TIMER
+	/* IRQ */
+	#   define IRQPORT    D
+	#   define IRQPIN     (0x04)
+
+	#   define ADPORT     F
+	#   define ADPIN      (0x00)
+	#   define DIDR       DIDR0
+
+	#   define USART      1
+	#   define USARTVECT  USART1_RX_vect
+
+	// HAS_CW_MODE?
+	// TXCWPORT?
+	// TXCWPIN?
+	/* TRX */
+	#   define RADIO_BAND BAND2400
+	#   define RADIO_VECT TIMER1_CAPT_vect
+	/* HAL */
+	#   define HAL_ENABLE_RADIO_INTERRUPT( ) ( TIMSK1 |= ( 1 << ICIE1 ) ),  \
+			TCCR1B = HAL_TCCR1B_CONFIG,   /* Set clock prescaler */ \
+			TIFR1 |= (1 << ICF1)        /* Clear Input Capture Flag. */
+	#   define HAL_DISABLE_RADIO_INTERRUPT( ) ( TIMSK1 &= ~( 1 << ICIE1 ), TCCR1B = 0 )
+	#   define HAL_INIT_ADC() DIDR0 |= (1 << ADPIN), ADMUX = 0xC0 | ADPIN, ADCSRA = 0x80
+	#   define HAL_STOP_ADC()  ADCSRA &= ~0x80
+	#   define HAL_SAMPLE_ADC() ADCSRA |= (1 << ADSC)
+	#   define HAL_WAIT_ADC() while (!(ADCSRA & (1<<ADIF))) {;}; ADCSRA |= (1<<ADIF)
+	#   define HAL_READ_ADC() ADC
+	/* LED */
+	// LED Macros
+	#define LED_INIT() (DDRE |= ((1<<2) | (1<<3) | (1<<4)), PORTE |= ((1<<2) | (1<<3) | (1<<4)))
+	// LED_ON(led), where led = 1-3
+	#define LED_ON(led) (PORTE &= ~(1 << (led+1)))
+	#define LED_OFF(led) (PORTE |= 1 << (led+1))
+
+	// Button macros
+	#define BUTTON_SETUP()                  DDRE &= ~(1 << PE5), PORTE |= (1 << PE5)
+	#define BUTTON_PRESSED() (DDRE &= ~0x20, PORTE |= 0x20, !(PINE & 0x20))
+
+#elif ( PLATFORM == RCB231 ) /* PORTREF: line 101 */
+/* RCB with ATmega1281 and RF231 */
+
+	#ifndef __AVR_ATmega1281__
+		#error "Incorrect MCU for Platform! Check Makefile"
+	#endif
+
+/**
+   \name Pin configurations for the RCB231 platform.
+
+   Change these values to port to other platforms.
+   \{
+*/
+	/* SPI */
+	#   define SSPORT     B          /**< Radio (SPI Slave) Select port */
+	#   define SSPIN      (0x00)     /**< Radio (SPI Slave) Select pin */
+	#   define SPIPORT    B          /**< Radio SPI port */
+	#   define MOSIPIN    (0x02)     /**< Radio SPI MOSI pin */
+	#   define MISOPIN    (0x03)     /**< Radio SPI MISO pin */
+	#   define SCKPIN     (0x01)     /**< Radio SPI SCK pin */
+	/* RST */
+	#   define RSTPORT    B          /**< Radio reset port */
+	#   define RSTPIN     (0x05)     /**< Radio reset pin */
+	/* SLP */
+	#   define SLPTRPORT  B          /**< Radio SLP_TR port */
+	#   define SLPTRPIN   (0x04)     /**< Radio SLP_TR pin */
+	/* TMR */
+	#   define TICKTIMER  3          /**< AVR timer used for tick timing */
+	// HAS_SPARE_TIMER?
+
+	#   define ADPORT     F          /**< ADC port */
+	#   define ADPIN      (0x00)     /**< ADC pin for sensor input */
+	#   define DIDR       DIDR0      /**< AVR DIDR register (see @ref HAL_INIT_ADC) */
+
+	#   define USART      1          /**< AVR UART used for debug serial port */
+
+	// HAS_CW_MODE?
+	// TXCWPORT?
+	// TXCWPIN?
+	/* TRX */
+	#   define RADIO_BAND BAND2400	 /**< Radio Frequency Band */
+	#   define RADIO_VECT INT0_vect  /**< Radio Interrupt Vector */
+	/* HAL */
+	    /// Macro to enable the radio interrupt
+	#   define HAL_ENABLE_RADIO_INTERRUPT( ) EICRA |= 3, EIMSK |= 1
+	    /// Macro to disable the radio interrupt
+	#   define HAL_DISABLE_RADIO_INTERRUPT( ) EICRA &= ~3, EIMSK &= ~1
+	    /** Macro to initialize the ADC converter.  note that on
+		some platforms, there is no ADC so this macro does nothing. */
+	#   define HAL_INIT_ADC() DIDR0 |= (1 << ADPIN), ADMUX = 0xC0 | ADPIN, ADCSRA = 0x84
+	    /// Macro to stop the ADC
+	#   define HAL_STOP_ADC() ADCSRA &= ~0x80
+	    /// Macro to sample the ADC
+	#   define HAL_SAMPLE_ADC() ADCSRA |= (1 << ADSC) | (1<< ADIF)
+	    /// Macro to wait for the ADC to finish sampling
+	#   define HAL_WAIT_ADC() while (!(ADCSRA & (1<<ADIF))) {;}; ADCSRA |= (1<<ADIF);
+	    /// Macro to READ the ADC value
+	#   define HAL_READ_ADC() ADC
+	/* LED */
+	// LED Macros
+	#define LED_INIT() (DDRE |= ((1<<2) | (1<<3) | (1<<4)), PORTE |= ((1<<2) | (1<<3) | (1<<4)))
+	// LED_ON(led), where led = 1-3
+	#define LED_ON(led) (PORTE &= ~(1 << (led+1)))
+	#define LED_OFF(led) (PORTE |= 1 << (led+1))
+
+	// Button macros
+	#define BUTTON_SETUP()                  DDRE &= ~(1 << PE5), PORTE |= (1 << PE5)
+	#define BUTTON_PRESSED() (DDRE &= ~0x20, PORTE |= 0x20, !(PINE & 0x20))
+
+/** \} */
+
+#elif ( PLATFORM == RCBSIP ) /* PORTREF: line 259 */
+/* RCB on SIP with ATmega1284P and RF231 */
+
+	#ifndef __AVR_ATmega1284P__
+		#error "Incorrect MCU for Platform! Check Makefile"
+	#endif
+
+	/* SPI */
+	#   define SSPORT     B
+	#   define SSPIN      (0x04)
+	#   define SPIPORT    B
+	#   define MOSIPORT   B
+	#   define MOSIPIN    (0x05)
+	#   define MISOPIN    (0x06)
+	#   define SCKPORT    B
+	#   define SCKPIN     (0x07)
+	/* RST */
+	#   define RSTPORT    B
+	#   define RSTPIN     (0x02)
+	/* SLP */
+	#   define SLPTRPORT  B
+	#   define SLPTRPIN   (0x03)
+	/* TMR */
+	#   define TICKTIMER  3
+	// HAS_SPARE_TIMER?
+
+	#   define PB0 0
+	#   define PD4 4
+	#   define PC0 0
+	#   define PC4 4
+	#   define PC6 6
+	#   define PC7 7
+
+	#   define USART      1
+
+	/* TRX */
+	#   define RADIO_BAND BAND2400
+	#   define RADIO_VECT TIMER1_CAPT_vect
+	/* HAL */
+	#   define HAL_ENABLE_RADIO_INTERRUPT( ) ( TIMSK1 |= ( 1 << ICIE1 ) ),  \
+			TCCR1B = HAL_TCCR1B_CONFIG,   /* Set clock prescaler */ \
+			TIFR1 |= (1 << ICF1)        /* Clear Input Capture Flag. */
+	#   define HAL_DISABLE_RADIO_INTERRUPT( ) ( TIMSK1 &= ~( 1 << ICIE1 ), TCCR1B = 0)
+	#   define HAL_INIT_ADC()
+	#   define HAL_STOP_ADC()
+	#   define HAL_SAMPLE_ADC()
+	#   define HAL_WAIT_ADC()
+	#   define HAL_READ_ADC() 0
+	/* LED */
+	// LED Macros
+	#define LED_INIT()              DDRD |= (1 << PD4), PORTD |= ~(1 << PD4)
+	// LED_ON(led), where led = 1-3
+	#define LED_ON(led)             DDRD |= (1 << PD4), PORTD &= ~(1 << PD4)
+	#define LED_OFF(led)            DDRD &= ~(1 << PD4), PORTD |= (1 << PD4)
+
+	// Button macros
+	#define BUTTON_SETUP()          DDRB &= ~(1 << PB0), PORTB |= (1 << PB0)
+	#define BUTTON_PRESSED()        (!(PINB & (1 << PB0)))
+
+#elif ( PLATFORM == RCB212 ) /* PORTREF: line 254 */
+/* RCB with ATmega1281 and RF212 (900MHz only) */
+
+	#ifndef __AVR_ATmega1281__
+		#error "Incorrect MCU for Platform! Check Makefile"
+	#endif
+
+	/* SPI */
+	#   define SSPORT     B
+	#   define SSPIN      (0x00)
+	#   define SPIPORT    B
+	#   define MOSIPIN    (0x02)
+	#   define MISOPIN    (0x03)
+	#   define SCKPIN     (0x01)
+	/* RST */
+	#   define RSTPORT    B
+	#   define RSTPIN     (0x05)
+	/* SLP */
+	#   define SLPTRPORT  B
+	#   define SLPTRPIN   (0x04)
+	/* TMR */
+	#   define TICKTIMER  3
+	// HAS_SPARE_TIMER?
+
+	#   define ADPORT     F
+	#   define ADPIN      (0x00)
+	#   define DIDR       DIDR0
+
+	#   define USART      1
+
+	/* TRX */
+	#   define RADIO_BAND BAND900
+	#   define RADIO_VECT INT0_vect
+	/* HAL */
+	#   define HAL_ENABLE_RADIO_INTERRUPT( ) EICRA |= 3, EIMSK |= 1
+	#   define HAL_DISABLE_RADIO_INTERRUPT( ) EICRA &= ~3, EIMSK &= ~1
+	#   define HAL_INIT_ADC() DIDR0 |= (1 << ADPIN), ADMUX = 0xC0 | ADPIN, ADCSRA = 0x84
+	#   define HAL_STOP_ADC() ADCSRA &= ~0x80
+	#   define HAL_SAMPLE_ADC() ADCSRA |= (1 << ADSC) | (1<< ADIF)
+	#   define HAL_WAIT_ADC() while (!(ADCSRA & (1<<ADIF))) {;}; ADCSRA |= (1<<ADIF)
+	#   define HAL_READ_ADC() ADC
+	/* LED */
+	// LED Macros
+	#define LED_INIT() (DDRE |= ((1<<2) | (1<<3) | (1<<4)), PORTE |= ((1<<2) | (1<<3) | (1<<4)))
+	// LED_ON(led), where led = 1-3
+	#define LED_ON(led) (PORTE &= ~(1 << (led+1)))
+	#define LED_OFF(led) (PORTE |= 1 << (led+1))
+
+	// Button macros
+	#define BUTTON_SETUP()                  DDRE &= ~(1 << PE5), PORTE |= (1 << PE5)
+	#define BUTTON_PRESSED() (DDRE &= ~0x20, PORTE |= 0x20, !(PINE & 0x20))
+
+//#elif HARWARE_REVISION == ZIGBIT /* PORTNOTE: Doesn't appear to be in Atmel definitions, comment it out for now. */
 /* 1281V Zigbit */
+/*
 #   define SSPORT     B
 #   define SSPIN      (0x00)
 #   define SPIPORT    B
@@ -156,57 +430,368 @@ typedef int64_t s64;
 #   define TXCWPIN    (0x07)
 #   define USART      1
 #   define USARTVECT  USART1_RX_vect
+*/
 //#   define TICKTIMER  3
 //#   define HAS_SPARE_TIMER // Not used
 
 
-#elif RAVEN_REVISION == RAVEN_D
-/* 1284 raven */
-#   define SSPORT     B
-#   define SSPIN      (0x04)
-#   define SPIPORT    B
-#   define MOSIPIN    (0x05)
-#   define MISOPIN    (0x06)
-#   define SCKPIN     (0x07)
-#   define RSTPORT    B
-#   define RSTPIN     (0x01)
-#   define IRQPORT    D
-#   define IRQPIN     (0x06)
-#   define SLPTRPORT  B
-#   define SLPTRPIN   (0x03)
-#   define TXCWPORT   B
-#   define TXCWPIN    (0x00)
-#   define USART      1
-#   define USARTVECT  USART1_RX_vect
-#   define TICKTIMER  3
-#   define HAS_CW_MODE
-#   define HAS_SPARE_TIMER
+#elif ( PLATFORM == RAVEN ) /* PORTREF: line 298 */
+/* Raven LCD with ATmega1284P */
 
-#elif RAVEN_REVISION == RAVENUSB_C
-/* 1287USB raven */
-#   define SSPORT     B
-#   define SSPIN      (0x00)
-#   define SPIPORT    B
-#   define MOSIPIN    (0x02)
-#   define MISOPIN    (0x03)
-#   define SCKPIN     (0x01)
-#   define RSTPORT    B
-#   define RSTPIN     (0x05)
-#   define IRQPORT    D
-#   define IRQPIN     (0x04)
-#   define SLPTRPORT  B
-#   define SLPTRPIN   (0x04)
-#   define TXCWPORT   B
-#   define TXCWPIN    (0x07)
-#   define USART      1
-#   define USARTVECT  USART1_RX_vect
-#   define TICKTIMER  3
-#   define HAS_CW_MODE
-#   define HAS_SPARE_TIMER
+	#ifndef __AVR_ATmega1284P__
+		#error "Incorrect MCU for Platform! Check Makefile"
+	#endif
+
+	/* SPI */
+	#   define SSPORT     B
+	#   define SSPIN      (0x04)
+	#   define SPIPORT    B
+	#   define MOSIPIN    (0x05)
+	#   define MISOPIN    (0x06)
+	#   define SCKPIN     (0x07)
+	/* RST */
+	#   define RSTPORT    B
+	#   define RSTPIN     (0x01)
+	/* SLP */
+	#   define SLPTRPORT  B
+	#   define SLPTRPIN   (0x03)
+	/* TMR */
+	#   define TICKTIMER  3
+	#   define HAS_SPARE_TIMER
+	/* IRQ */
+	#   define IRQPORT    D
+	#   define IRQPIN     (0x06)
+	
+	#   define PC4 4
+	#   define PC6 6
+	#   define PC7 7
+
+	#   define USART      0 /* PORTNOTE: this was 1 */
+	#   define USARTVECT  USART1_RX_vect
+
+	#   define HAS_CW_MODE
+	#   define TXCWPORT   B
+	#   define TXCWPIN    (0x00)
+
+	/* TRX */
+	#   define RADIO_BAND BAND2400
+	#   define RADIO_VECT TIMER1_CAPT_vect
+	/* HAL */
+	#   define HAL_ENABLE_RADIO_INTERRUPT( ) ( TIMSK1 |= ( 1 << ICIE1 ) ),  \
+			TCCR1B = HAL_TCCR1B_CONFIG,   /* Set clock prescaler */ \
+			TIFR1 |= (1 << ICF1)        /* Clear Input Capture Flag. */
+	#   define HAL_DISABLE_RADIO_INTERRUPT( ) ( TIMSK1 &= ~( 1 << ICIE1 ) )
+	#   define HAL_INIT_ADC() /* NILL */
+	#   define HAL_STOP_ADC() /* NILL */
+	#   define HAL_SAMPLE_ADC() /* NILL */
+	#   define HAL_WAIT_ADC() /* NILL */
+	#   define HAL_READ_ADC() ADC
+	/* LED */
+	// LED Macros
+	#define LED_INIT()
+	// LED_ON(led), where led = 1-3
+	// Needs code programmed into Mega3290 to work!!
+	// RAVEN only has one LED - so we never check which one... should do that probably
+	#define LED_ON(led)
+	#define LED_OFF(led)
+
+	// Button macros - needs code programmed into Mega3290 to work!!
+	#define BUTTON_SETUP()
+	#define BUTTON_PRESSED() 0
+
+#elif ( PLATFORM == RAVENUSB ) /* || ( RAVEN_REVISION == RAVENUSB_C ) */ /* PORTREF: line 389 */
+/* Raven USB with AT90USB1287 */
+
+	#ifndef __AVR_AT90USB1287__
+		#error "Incorrect MCU for Platform! Check Makefile"
+	#endif
+	/* SPI */
+	#   define SSPORT     B
+	#   define SSPIN      (0x00)
+	#   define SPIPORT    B
+	#   define MOSIPIN    (0x02)
+	#   define MISOPIN    (0x03)
+	#   define SCKPIN     (0x01)
+	/* RST */
+	#   define RSTPORT    B
+	#   define RSTPIN     (0x05)
+	/* SLP */
+	#   define SLPTRPORT  B
+	#   define SLPTRPIN   (0x04)
+	/* TMR */
+	#   define TICKTIMER  3
+	#   define HAS_SPARE_TIMER
+	/* IRQ */
+	#   define IRQPORT    D
+	#   define IRQPIN     (0x04)
+
+	#   define USART      1
+	#   define USARTVECT  USART1_RX_vect
+
+	#   define HAS_CW_MODE
+	#   define TXCWPORT   B
+	#   define TXCWPIN    (0x07)
+	/* TRX */
+	#   define RADIO_BAND BAND2400
+	#   define RADIO_VECT TIMER1_CAPT_vect
+	/* HAL */
+	#   define HAL_ENABLE_RADIO_INTERRUPT( ) ( TIMSK1 |= ( 1 << ICIE1 ) ),  \
+			TCCR1B = HAL_TCCR1B_CONFIG,   /* Set clock prescaler */ \
+			TIFR1 |= (1 << ICF1)        /* Clear Input Capture Flag. */
+	#   define HAL_DISABLE_RADIO_INTERRUPT( ) ( TIMSK1 &= ~( 1 << ICIE1 ), TCCR1B = 0 )
+	#   define HAL_INIT_ADC()
+	#   define HAL_STOP_ADC()
+	#   define HAL_WAIT_ADC()
+	#   define HAL_READ_ADC() 0
+	#   define HAL_SAMPLE_ADC()
+	/* LED */
+	#define Leds_init()                 (DDRD  |=  0xA0, DDRE  |=  0xC0)
+	#define Leds_on()                   (PORTD |=  0x80, PORTD &= ~0x40, PORTE &=  ~0xC0)
+	#define Leds_off()                  (PORTD &= ~0x80, PORTD |=  0x40, PORTE |=   0xC0)
+	#define Led0_on()                   (PORTD |=  0x80)
+	#define Led1_on()                   (PORTD &= ~0x20)
+	#define Led2_on()                   (PORTE &= ~0x80)
+	#define Led3_on()                   (PORTE &= ~0x40)
+	#define Led0_off()                  (PORTD &= ~0x80)
+	#define Led1_off()                  (PORTD |=  0x20)
+	#define Led2_off()                  (PORTE |=  0x80)
+	#define Led3_off()                  (PORTE |=  0x40)
+	#define Led0_toggle()               (PIND |= 0x80)
+	#define Led1_toggle()               (PIND |= 0x20)
+	#define Led2_toggle()               (PINE |= 0x80)
+	#define Led3_toggle()               (PINE |= 0x40)
+	// LED Macros
+	#define LED_INIT()                  Leds_init()
+	// LED_ON(led), where led doesn't matter - there is only one LED on the board.
+	#define LED_ON(led)                 Led0_on()
+	#define LED_OFF(led)                Led0_off()
+	/* Button macros (this platform has no buttons) */
+	#define BUTTON_SETUP()
+	#define BUTTON_PRESSED()        0
+
+#elif ( PLATFORM == SPITFIRE ) /* PORTREF: line 348 */
+/* Spitfire with  ATmega328P and ATmega168P */
+
+	#if (!defined(__AVR_ATmega328P__) && !defined(__AVR_ATmega168P__))
+		#error "Incorrect MCU for Platform! Check Makefile"
+	#endif
+
+	/* SPI */
+	#   define SSPORT     B
+	#   define SSPIN      (0x02)
+	#   define SPIPORT    B
+	#   define MOSIPIN    (0x03)
+	#   define MISOPIN    (0x04)
+	#   define SCKPIN     (0x05)
+	/* RST */
+	#   define RSTPORT    B
+	#   define RSTPIN     (0x01)
+	/* SLP */
+	#   define SLPTRPORT  D
+	#   define SLPTRPIN   (0x04)
+	/* TMR */
+	#   define TICKTIMER  1
+	// HAS_SPARE_TIMER?
+	/* IRQ */
+	// IRQ?
+	/* TRX */
+	#   define RADIO_BAND BAND900
+	#   define RADIO_VECT PCINT0_vect
+
+	#   define PD7 7
+	
+	#   define USART
+
+	// HAS_CW_MODE?
+	// TXCWPORT?
+	// TXCWPIN?
+
+	/* HAL */
+	#   define HAL_ENABLE_RADIO_INTERRUPT( ) PCICR |= (1<<0), PCMSK0 |= (1<<0)
+	#   define HAL_DISABLE_RADIO_INTERRUPT( ) PCMSK0 &= ~(1<<0)
+	#   define HAL_INIT_ADC()  ADMUX = 0x47, ADCSRA = 0x80
+	#   define HAL_STOP_ADC()  ADCSRA &= ~0x80
+	#   define HAL_SAMPLE_ADC() ADCSRA |= (1 << ADSC)
+	#   define HAL_WAIT_ADC() while (!(ADCSRA & (1<<ADIF))) {;}; ADCSRA |= (1<<ADIF)
+	#   define HAL_READ_ADC() ADC
+	/* LED */
+	// LED Macros
+	#define LED_INIT()             DDRD |= (1 << PD7), PORTD |= (1 << PD7)
+	// LED_ON(led), where led doesn't matter - there is only one LED on the board.
+	#define LED_ON(led)            DDRD |= (1 << PD7), PORTD &= !(1 << PD7)
+	#define LED_OFF(led)           DDRD &= ~(1 << PD7), PORTD |= (1 << PD7)
+
+	// Button macros (this platform has no buttons)
+	#define BUTTON_SETUP()
+	#define BUTTON_PRESSED()        0
+
+#elif PLATFORM==ZIGBIT09 || PLATFORM==ZIGBIT24 /* PORTREF: line 446 */
+/* ZIGBIT modules (900MHz and 2400MHZ)*/
+
+	#ifndef __AVR_ATmega1281__
+		#error "Incorrect MCU for Platform! Check Makefile"
+	#endif
+
+	/* SPI */
+	#   define SSPORT     B
+	#   define SSPIN      (0x00)
+	#   define SPIPORT    B
+	#   define MOSIPIN    (0x02)
+	#   define MISOPIN    (0x03)
+	#   define SCKPIN     (0x01)
+	/* RST */
+	#   define RSTPORT    A
+	#   define RSTPIN     (0x07)
+	/* SLP */
+	#   define SLPTRPORT  B
+	#   define SLPTRPIN   (0x04)
+	/* TMR */
+	#   define TICKTIMER  3
+	// HAS_SPARE_TIMER?
+
+	#   define USART      1
+
+	/* TRX */
+	/*
+	 * #ifndef RADIO_BAND
+	 * 	#warning "Setting Radio Frequency Band to 2.4GHz. Please define RADIO_BAND to use 900MHz."
+	 * 	#define RADIO_BAND BAND2400
+	 * #endif
+	 */
+	 /* Define which band we're operating in - 900MHz or 2.4GHz. */
+	 #if PLATFORM==ZIGBIT24
+	     #define RADIO_BAND BAND2400
+	 #else
+	     #define RADIO_BAND BAND900
+	 #endif
+
+	 #    define RADIO_VECT INT5_vect
+
+	/* HAL */
+	#   define HAL_ENABLE_RADIO_INTERRUPT( ) EICRB |= 0x0C, EIMSK |= 0x20
+	#   define HAL_DISABLE_RADIO_INTERRUPT( ) EICRB &= ~0x0C, EIMSK &= ~0x20
+
+	#   define HAL_INIT_ADC()
+	#   define HAL_STOP_ADC()
+	#   define HAL_SAMPLE_ADC()
+	#   define HAL_WAIT_ADC()
+	#   define HAL_READ_ADC() 0
+
+	/* LED */
+	// LED's for MESHBEAN USB
+	// LED1 = PB5
+	// LED2 = PB6
+	// LED3 = PB7
+	#define Leds_init()      (DDRB  |=  0xE0)
+	#define Leds_on()        (PORTB |=  0x80)
+	#define Leds_off()       (PORTB &= ~0xE0)
+	#define Led0_on()
+	#define Led1_on()        (PORTB |=  0x80)
+	#define Led2_on()        (PORTB |=  0x40)
+	#define Led3_on()        (PORTB |=  0x20)
+	#define Led0_off()
+	#define Led1_off()       (PORTB &= ~0x80)
+	#define Led2_off()       (PORTB &= ~0x40)
+	#define Led3_off()       (PORTB &= ~0x20)
+	#define Led0_toggle()
+	#define Led1_toggle()    (PINB  |= 0x80)
+	#define Led2_toggle()    (PINB  |= 0x40)
+	#define Led3_toggle()    (PINB  |= 0x20)
+
+	// LED Macros
+	#define LED_INIT()                  Leds_init()
+	// LED_ON(led), where led doesn't matter - there is only one LED on the board.
+	#define LED_ON(led)                 Led1_on()
+	#define LED_OFF(led)                Led1_off()
+
+	// Button macros (PE6, needs pullup, short to gnd when pressed)
+	#define BUTTON_SETUP()     (DDRE &= ~(1 << 6), PINE |= (1 << 6))
+	#define BUTTON_PRESSED()   (!(PINE & (1 << 6)))
+
+
+#elif ( PLATFORM==DSK001 ) /* PORTREF: line 512 */
+/* TRT "button" board DSK001 with ATmega328P */
+
+	#ifndef __AVR_ATmega328P__
+		#error "Incorrect MCU for Platform! Check Makefile"
+	#endif
+
+	/* SPI */
+	#   define SSPORT     B
+	#   define SSPIN      (0x02)
+	#   define SPIPORT    B
+	#   define MOSIPIN    (0x03)
+	#   define MISOPIN    (0x04)
+	#   define SCKPIN     (0x05)
+	/* RST */
+	#   define RSTPORT    C
+	#   define RSTPIN     (0x05)
+	/* SLP */
+	#   define SLPTRPORT  C
+	#   define SLPTRPIN   (0x04)
+	/* TMR */
+	#   define TICKTIMER  1
+	// HAS_SPARE_TIMER?
+
+	#   define USART      0
+
+	/* TRX */
+	#   define RADIO_BAND BAND2400
+	#   define RADIO_VECT PCINT0_vect
+	/* HAL */
+	#   define HAL_ENABLE_RADIO_INTERRUPT( ) PCICR |= (1 << PCIE0), PCMSK0 |= (1 << PCINT1)
+	#   define HAL_DISABLE_RADIO_INTERRUPT( ) PCMSK0 &= ~(1 << PCINT1)
+
+	#   define HAL_INIT_ADC()    ADMUX = 0xc8, ADCSRA = (1 << ADEN) | (1<<ADPS1) | (1<<ADPS2)
+	#   define HAL_STOP_ADC()    ADMUX = 0x0F, ADCSRA = 1<<ADIF
+	#   define HAL_SAMPLE_ADC()  ADCSRA |= (1 << ADSC) | (1 << ADIF)
+	#   define HAL_WAIT_ADC()    while (!(ADCSRA & (1<<ADIF))) {;}; ADCSRA |= (1<<ADIF)
+	#   define HAL_READ_ADC()    ADC
+
+	#   define HAL_SELECT_ACCELZ()   ADMUX = (ADMUX & 0xF0) | 0x02
+	#   define HAL_SELECT_ACCELY()   ADMUX = (ADMUX & 0xF0) | 0x01
+	#   define HAL_SELECT_ACCELX()   ADMUX = (ADMUX & 0xF0) | 0x00
+
+	#   define HAL_ACCEL_INIT()      DDRC = (DDRC & 0xf0) | (1<<3), PORTC &= 0xf0;
+	#   define HAL_ACCEL_ON()        PORTC |= 1<<3
+	#   define HAL_ACCEL_OFF()       PORTC &= ~(1<<3)
+	/* LED */
+	// LED is on Port D Pin 7
+	#define Leds_init()   //   (DDRD  |=  0x80, PORTD &= ~0x80)
+	#define Leds_on()   (DDRD  |=  0x80, PORTD &= ~0x80)
+	#define Leds_off()  (DDRD  &=  ~0x80)
+	#define Led0_on()   (DDRD  |=  0x80, PORTD &= ~0x80)
+	#define Led1_on()   (DDRD  |=  0x80, PORTD &= ~0x80)
+	#define Led2_on()   (DDRD  |=  0x80, PORTD &= ~0x80)
+	#define Led3_on()   (DDRD  |=  0x80, PORTD &= ~0x80)
+	#define Led0_off()  (DDRD  &=  ~0x80)
+	#define Led1_off()  (DDRD  &=  ~0x80)
+	#define Led2_off()  (DDRD  &=  ~0x80)
+	#define Led3_off()  (DDRD  &=  ~0x80)
+	#define Led0_toggle() DDRD = DDRD ^ 0x80)
+	#define Led1_toggle()  DDRD = DDRD ^ 0x80
+	#define Led2_toggle()  DDRD = DDRD ^ 0x80
+	#define Led3_toggle()  DDRD = DDRD ^ 0x80
+
+	// LED Macros
+	#define LED_INIT()                  Leds_init()
+	// LED_ON(led), where led doesn't matter - there is only one LED on the board.
+	#define LED_ON(led)                 Led1_on()
+	#define LED_OFF(led)                Led1_off()
+
+	// Button macros (no button on this platform)
+	#define BUTTON_SETUP()
+	#define BUTTON_PRESSED()  0
 
 #else
 
-#error "Platform undefined in hal.h"
+#ifdef ATMEL_BOARD_SPEC
+	#warning "Using Atmel boars specs in hal.h"
+	#error "Platform undefined in hal.h"
+#else
+	#warning "Using board.h"
+	#include "board.h"
+#endif
 
 #endif
 
@@ -271,20 +856,21 @@ typedef int64_t s64;
 #define hal_set_rst_high( )   ( PORT_RST |= ( 1 << RST ) )  /**< This macro pulls the RST pin high. */
 #define hal_set_rst_low( )    ( PORT_RST &= ~( 1 << RST ) ) /**< This macro pulls the RST pin low. */
 #define hal_get_rst( )        ( ( PIN_RST & ( 1 << RST )  ) >> RST )  /**< Read current state of the RST pin (High/Low). */
-#define HAL_SS_PIN            SSPIN               /**< The slave select pin. */
+/*#define HAL_SS_PIN            SSPIN           *//**< The slave select pin. */
 #define HAL_PORT_SPI          PORT( SPIPORT )     /**< The SPI module is located on PORTB. */
 #define HAL_DDR_SPI           DDR( SPIPORT )      /**< Data Direction Register for PORTB. */
 #define HAL_DD_SS             SSPIN               /**< Data Direction bit for SS. */
 #define HAL_DD_SCK            SCKPIN              /**< Data Direction bit for SCK. */
 #define HAL_DD_MOSI           MOSIPIN             /**< Data Direction bit for MOSI. */
 #define HAL_DD_MISO           MISOPIN             /**< Data Direction bit for MISO. */
+#define HAL_PORT_SS           PORT( SSPORT )	  /**< The SPI module PORT. */	/* PORTLABLE: COMPAT */
+#define HAL_DDR_SS            DDR( SSPORT )	  /**< Data Direction register for the SPI port. */ /* PORTLABLE: COMPAT */
 /** \} */
 
+#define HAL_SS_HIGH( ) (HAL_PORT_SS |= ( 1 << HAL_DD_SS )) /**< MACRO for pulling SS high. */
+#define HAL_SS_LOW( )  (HAL_PORT_SS &= ~( 1 << HAL_DD_SS )) /**< MACRO for pulling SS low. */
 
-#define HAL_SS_HIGH( ) (HAL_PORT_SPI |= ( 1 << HAL_SS_PIN )) /**< MACRO for pulling SS high. */
-#define HAL_SS_LOW( )  (HAL_PORT_SPI &= ~( 1 << HAL_SS_PIN )) /**< MACRO for pulling SS low. */
-
-/** \brief Macros defined for HAL_TIMER1.
+/** \brief Macros defined for the radio received packet timer (HAL_TIMER1).
  *
  *  These macros are used to define the correct setupt of the AVR's Timer1, and
  *  to ensure that the hal_get_system_time function returns the system time in
@@ -312,7 +898,7 @@ typedef int64_t s64;
 #endif
 
 #if HARWARE_REVISION == ZIGBIT
-// IRQ E5 for Zigbit example
+/* IRQ E5 for Zigbit example */
 #define RADIO_VECT INT5_vect
 #define HAL_ENABLE_RADIO_INTERRUPT( ) { ( EIMSK |= ( 1 << INT5 ) ) ; EICRB |= 0x0C ; PORTE &= ~(1<<PE5);  DDRE &= ~(1<<DDE5); }
 #define HAL_DISABLE_RADIO_INTERRUPT( ) ( EIMSK &= ~( 1 << INT5 ) )
@@ -364,31 +950,43 @@ typedef int64_t s64;
  *
  *  \see hal_frame_read
  */
-typedef struct{
+typedef struct{								/* PORTNOTE: Atmel doesn't have the hal_rx_frame_t here. */
     uint8_t length;                       /**< Length of frame. */
     uint8_t data[ HAL_MAX_FRAME_LENGTH ]; /**< Actual frame data. */
     uint8_t lqi;                          /**< LQI value for received frame. */
     bool crc;                             /**< Flag - did CRC pass for received frame? */
 } hal_rx_frame_t;
 
-/** RX_START event handler callback type. Is called with timestamp in IEEE 802.15.4 symbols and frame length. See hal_set_rx_start_event_handler(). */
-typedef void (*hal_rx_start_isr_event_handler_t)(uint32_t const isr_timestamp, uint8_t const frame_length);
+/** RX_START event handler callback type.
+ *		Is called with timestamp in IEEE 802.15.4 symbols and frame length.
+ *		See hal_set_rx_start_event_handler().
+ **/
 
-/** RRX_END event handler callback type. Is called with timestamp in IEEE 802.15.4 symbols and frame length. See hal_set_trx_end_event_handler(). */
-typedef void (*hal_trx_end_isr_event_handler_t)(uint32_t const isr_timestamp);
+typedef void (*hal_rx_start_isr_event_handler_t)
+		(uint32_t const isr_timestamp, uint8_t const frame_length);
 
-typedef void (*rx_callback_t) (uint16_t data);
+/** RRX_END event handler callback type.
+ *		Is called with timestamp in IEEE 802.15.4 symbols and frame length.
+ *		See hal_set_trx_end_event_handler().
+ **/
+typedef void (*hal_trx_end_isr_event_handler_t)
+		(uint32_t const isr_timestamp);
+
+typedef void (*rx_callback_t)
+		(uint16_t data);
 
 /*============================ PROTOTYPES ====================================*/
 void hal_init( void );
-void hal_spi_init(void);
+void hal_spi_init( void );
 
 void hal_reset_flags( void );
 uint8_t hal_get_bat_low_flag( void );
 void hal_clear_bat_low_flag( void );
 
 hal_trx_end_isr_event_handler_t hal_get_trx_end_event_handler( void );
+
 void hal_set_trx_end_event_handler( hal_trx_end_isr_event_handler_t trx_end_callback_handle );
+
 void hal_clear_trx_end_event_handler( void );
 
 hal_rx_start_isr_event_handler_t hal_get_rx_start_event_handler( void );
@@ -400,13 +998,24 @@ void hal_clear_pll_lock_flag( void );
 
 uint8_t hal_register_read( uint8_t address );
 void hal_register_write( uint8_t address, uint8_t value );
-uint8_t hal_subregister_read( uint8_t address, uint8_t mask, uint8_t position );
-void hal_subregister_write( uint8_t address, uint8_t mask, uint8_t position,
+
+uint8_t hal_subregister_read( uint8_t address,
+			      uint8_t mask,
+			      uint8_t position );
+
+void hal_subregister_write( uint8_t address,
+			    uint8_t mask,
+			    uint8_t position,
                             uint8_t value );
-void hal_frame_read(hal_rx_frame_t *rx_frame, rx_callback_t rx_callback);
+
+void hal_frame_read( hal_rx_frame_t *rx_frame, rx_callback_t rx_callback);
 void hal_frame_write( uint8_t *write_buffer, uint8_t length );
+
 void hal_sram_read( uint8_t address, uint8_t length, uint8_t *data );
 void hal_sram_write( uint8_t address, uint8_t length, uint8_t *data );
+
+void hal_eeprom_read_block(u8 *addr, u8 length, u8 *dest);
+void hal_eeprom_write_block(u8 *addr, u8 length, u8 *src);
 
 #endif
 /** @} */

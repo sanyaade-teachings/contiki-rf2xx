@@ -155,7 +155,6 @@
 
 /** @} */
 
-
 /* RCB with 231/1284 Device on SIP chip */
 #elif PLATFORM==RCBSIP
         #ifndef __AVR_ATmega1284P__
@@ -631,7 +630,7 @@
 /**  @} */
 
 /**
-   @name Macros to use in source code for platform-specific names
+   @name Macros to use in source code for platform-specific pin names
    @{
 */
 #define SLP_TR                SLPTRPIN            ///< Pin number that corresponds to the SLP_TR pin.
