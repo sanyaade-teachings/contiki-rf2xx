@@ -1,0 +1,120 @@
+781d
+775d
+754d
+750d
+744d
+734d
+711d
+706d
+700d
+681,684d
+679d
+673d
+655,669c
+	/* Define which band we're operating in - 900MHz or 2.4GHz. */
+	#if PLATFORM==ZIGBIT24
+	#   define RADIO_BAND BAND2400
+	#else
+	#   define RADIO_BAND BAND900
+	#endif
+	#    define RADIO_VECT INT5_vect
+.
+650d
+623d
+605,608c
+	/* TRX */
+	#   define RADIO_BAND BAND900
+	#   define RADIO_VECT PCINT0_vect
+.
+594,599d
+507a
+
+.
+497d
+414,437d
+409d
+357d
+296,297c
+	/** Button Macros */
+.
+294a
+	/** LED_OFF(led), where led = 1-3 */
+.
+293c
+	/** LED_ON(led), where led = 1-3 */
+.
+290,291c
+	/** LED Macros */
+.
+288c
+	/** Macro to READ the ADC value */
+.
+286c
+	/** Macro to wait for the ADC to finish sampling */
+.
+284c
+	/** Macro to sample the ADC */
+.
+282c
+	/** Macro to stop the ADC */
+.
+279,280c
+	/** Macro to initialize the ADC converter
+	 ** On some platforms this macro does nothing */
+.
+277c
+	/** Macro to disable the radio interrupt */
+.
+275c
+	/** Macro to enable the radio interrupt */
+.
+268,270d
+260d
+242,244d
+239,240c
+/**\name Pin configurations for the RCB231 platform.
+ *
+ * Change these values to port to other platforms.
+ */
+/** \{ */
+.
+227d
+205,207d
+162,166c
+/**\brief Defines the platform for which we are building the firmware.
+ * See \ref RCB230 under "Platform types" above for possible values.
+ */
+.
+159c
+/** \} */
+.
+146,156c
+/**\def RADIO_BAND
+ * \brief The RADIO_BAND macro is set to one particular band based
+ * on which platform selected for compilation.  Do not manually set
+ * this macro.
+ *
+ * \name RF Bands supported
+ *
+ * The \ref RADIO_BAND macro is set to one of the following two bands.
+ */
+/** \{ */
+.
+144c
+/** \} */
+.
+110,133c
+/** \{ */
+.
+106,108c
+/**\name Platform types.
+ *
+ * Note that the order of these definitions is not arbitrary, and
+ * there are comparisons of the @ref PLATFORM variable based on
+ * position within the list.  In other words, re-arranging the list
+ * can break the code.  Feel free to add new platforms on the end of
+ * the list.  Note that an RCB230 board can be loaded with an 'RF231
+ * chip, and vice-versa.  The firmware identifies which radio chip is
+ * loaded and acts accordingly.  The RCB230/231 distinction is in
+ * which board is being used, not which chip is loaded.
+.
