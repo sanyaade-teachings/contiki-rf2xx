@@ -1,0 +1,27 @@
+33a34
+> #define HAVE_REGISTER_MAP (1)
+91a93
+> #define SLEEP			 (15)
+118a121,128
+> #define SR_IEEE_ADDR_0               0x24, 0xff, 0
+> #define SR_IEEE_ADDR_1               0x25, 0xff, 0
+> #define SR_IEEE_ADDR_2               0x26, 0xff, 0
+> #define SR_IEEE_ADDR_3               0x27, 0xff, 0
+> #define SR_IEEE_ADDR_4               0x28, 0xff, 0
+> #define SR_IEEE_ADDR_5               0x29, 0xff, 0
+> #define SR_IEEE_ADDR_6               0x2a, 0xff, 0
+> #define SR_IEEE_ADDR_7               0x2b, 0xff, 0
+126a137
+> #define SR_IRQ_MASK                  0x0e, 0xff, 0
+127a139,140
+> #define SR_MAN_ID_0                  0x1e, 0xff, 0
+> #define SR_MAN_ID_1                  0x1f, 0xff, 0
+132a146,148
+> #define SR_PAN_ID_0                  0x22, 0xff, 0
+> #define SR_PAN_ID_1                  0x23, 0xff, 0
+> #define SR_PART_NUM                  0x1c, 0xff, 0
+149a166,167
+> #define SR_SHORT_ADDR_0              0x20, 0xff, 0
+> #define SR_SHORT_ADDR_1              0x21, 0xff, 0
+156a175
+> #define SR_VERSION_NUM               0x1d, 0xff, 0
