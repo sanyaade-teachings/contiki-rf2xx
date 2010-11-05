@@ -30,8 +30,6 @@
   $Id: at86rf23x_registermap.h,v 1.1 2009/05/21 20:13:24 mvidales Exp $
 */
 
-/*  TODO: fix the Doxygen comments */
-
 /**
    @addtogroup radio
    @{
@@ -49,7 +47,6 @@
    @name Radio Registers
    @{
 */
-#define HAVE_REGISTER_MAP (1)
 /** Offset for register TRX_STATUS */
 #define RG_TRX_STATUS                    (0x01)
 /** Access parameters for sub-register CCA_DONE in register @ref RG_TRX_STATUS */
@@ -73,8 +70,6 @@
 #define PLL_ON                   (9)
 /** Constant SLEEP for sub-register @ref SR_TRX_STATUS */
 #define SLEEP_REG                (15)
-/** Constant SLEEP for sub-register @ref SR_TRX_STATUS */
-#define SLEEP			 (15)
 /** Constant BUSY_RX_AACK for sub-register @ref SR_TRX_STATUS */
 #define BUSY_RX_AACK             (17)
 /** Constant BUSY_TX_ARET for sub-register @ref SR_TRX_STATUS */
@@ -99,6 +94,8 @@
 #define RG_TRX_CTRL_0                    (0x03)
 /** Offset for register TRX_CTRL_1 */
 #define RG_TRX_CTRL_1                    (0x04)
+/** Access parameters for sub-register IRQ_MASK_MODE in register @ref RG_TRX_CTRL_1 */
+#define SR_IRQ_MASK_MODE             0x04, 0x02, 1
 /** Access parameters for sub-register PAD_IO in register @ref RG_TRX_CTRL_0 */
 #define SR_PAD_IO                    0x03, 0xc0, 6
 /** Access parameters for sub-register PAD_IO_CLKM in register @ref RG_TRX_CTRL_0 */
@@ -151,13 +148,9 @@
 #define RG_TRX_CTRL_2                    (0x0c)
 /** Access parameters for sub-register RX_SAFE_MODE in register @ref RG_TRX_CTRL_2 */
 #define SR_RX_SAFE_MODE              0x0c, 0x80, 7
-/** Access parameters for sub-register IRQ_MASK_MODE in register @ref RG_TRX_CTRL_1 */
-#define SR_IRQ_MASK_MODE             0x04, 0x02, 1
 
 /** Offset for register IRQ_MASK */
 #define RG_IRQ_MASK                      (0x0e)
-/** Access parameters for sub-register IRQ_MASK in register @ref RG_IRQ_MASK */
-#define SR_IRQ_MASK                  0x0e, 0xff, 0
 /** Offset for register IRQ_STATUS */
 #define RG_IRQ_STATUS                    (0x0f)
 /** Offset for register VREG_CTRL */
@@ -221,20 +214,12 @@
 #define SR_PLL_DCUW                  0x1b, 0x3f, 0
 /** Offset for register PART_NUM */
 #define RG_PART_NUM                      (0x1c)
-/** Access parameters for sub-register PART_NUM in register @ref RG_PART_NUM */
-#define SR_PART_NUM                  0x1c, 0xff, 0
 /** Offset for register VERSION_NUM */
 #define RG_VERSION_NUM                   (0x1d)
-/** Access parameters for sub-register VERSION_NUM in register @ref RG_VERSION_NUM */
-#define SR_VERSION_NUM               0x1d, 0xff, 0
 /** Offset for register MAN_ID_0 */
 #define RG_MAN_ID_0                      (0x1e)
-/** Access parameters for sub-register MAN_ID_0 in register @ref RG_MAN_ID_0 */
-#define SR_MAN_ID_0                  0x1e, 0xff, 0
 /** Offset for register MAN_ID_1 */
 #define RG_MAN_ID_1                      (0x1f)
-/** Access parameters for sub-register MAN_ID_1 in register @ref RG_MAN_ID_1 */
-#define SR_MAN_ID_1                  0x1f, 0xff, 0
 /** Offset for register XAH_CTRL */
 #define RG_XAH_CTRL_0                     (0x2c)
 /** Access parameters for sub-register MAX_FRAME_RETRIES in register @ref RG_XAH_CTRL_0 */
@@ -252,9 +237,9 @@
 /** @} */
 
 /**
-   \name Radio commands.
-   See \ref SR_TRX_CMD and radio datasheet for details.
-   \{
+   @name Radio commands.
+   See @ref SR_TRX_CMD and radio datasheet for details.
+   @{
 */
 /** Constant CMD_NOP for sub-register @ref SR_TRX_CMD */
 #define CMD_NOP                  (0)
@@ -272,11 +257,11 @@
 #define CMD_RX_AACK_ON           (22)
 /** Constant CMD_TX_ARET_ON for sub-register @ref SR_TRX_CMD */
 #define CMD_TX_ARET_ON           (25)
-/** \} */
+/** @} */
 /**
-   \name Constants for CLKM current.
-   See \ref SR_PAD_IO_CLKM.
-   \{
+   @name Constants for CLKM current.
+   See @ref SR_PAD_IO_CLKM.
+   @{
 */
 /** Constant CLKM_2mA for sub-register @ref SR_PAD_IO_CLKM */
 #define CLKM_2mA                 (0)
@@ -286,7 +271,7 @@
 #define CLKM_6mA                 (2)
 /** Constant CLKM_8mA for sub-register @ref SR_PAD_IO_CLKM */
 #define CLKM_8mA                 (3)
-/** \} */
+/** @} */
 /**
    @name Constants that define the CLKM frequency.
 
@@ -370,12 +355,8 @@
 */
 /** Offset for register SHORT_ADDR_0 */
 #define RG_SHORT_ADDR_0                  (0x20)
-/** Access parameters for sub-register SHORT_ADDR_0 in register @ref RG_SHORT_ADDR_0 */
-#define SR_SHORT_ADDR_0              0x20, 0xff, 0
 /** Offset for register SHORT_ADDR_1 */
 #define RG_SHORT_ADDR_1                  (0x21)
-/** Access parameters for sub-register SHORT_ADDR_1 in register @ref RG_SHORT_ADDR_1 */
-#define SR_SHORT_ADDR_1              0x21, 0xff, 0
 /** @} */
 /**
    @name Registers that hold the node's PAN ID in the radio.
@@ -383,12 +364,8 @@
 */
 /** Offset for register PAN_ID_0 */
 #define RG_PAN_ID_0                      (0x22)
-/** Access parameters for sub-register PAN_ID_0 in register @ref RG_PAN_ID_0 */
-#define SR_PAN_ID_0                  0x22, 0xff, 0
 /** Offset for register PAN_ID_1 */
 #define RG_PAN_ID_1                      (0x23)
-/** Access parameters for sub-register PAN_ID_1 in register @ref RG_PAN_ID_1 */
-#define SR_PAN_ID_1                  0x23, 0xff, 0
 /** @} */
 /**
    @name Registers that hold the node's MAC Address in the radio.
@@ -396,36 +373,20 @@
 */
 /** Offset for register IEEE_ADDR_0 */
 #define RG_IEEE_ADDR_0                   (0x24)
-/** Access parameters for sub-register IEEE_ADDR_0 in register @ref RG_IEEE_ADDR_0 */
-#define SR_IEEE_ADDR_0               0x24, 0xff, 0
 /** Offset for register IEEE_ADDR_1 */
 #define RG_IEEE_ADDR_1                   (0x25)
-/** Access parameters for sub-register IEEE_ADDR_1 in register @ref RG_IEEE_ADDR_1 */
-#define SR_IEEE_ADDR_1               0x25, 0xff, 0
 /** Offset for register IEEE_ADDR_2 */
 #define RG_IEEE_ADDR_2                   (0x26)
-/** Access parameters for sub-register IEEE_ADDR_2 in register @ref RG_IEEE_ADDR_2 */
-#define SR_IEEE_ADDR_2               0x26, 0xff, 0
 /** Offset for register IEEE_ADDR_3 */
 #define RG_IEEE_ADDR_3                   (0x27)
-/** Access parameters for sub-register IEEE_ADDR_3 in register @ref RG_IEEE_ADDR_3 */
-#define SR_IEEE_ADDR_3               0x27, 0xff, 0
 /** Offset for register IEEE_ADDR_4 */
 #define RG_IEEE_ADDR_4                   (0x28)
-/** Access parameters for sub-register IEEE_ADDR_4 in register @ref RG_IEEE_ADDR_4 */
-#define SR_IEEE_ADDR_4               0x28, 0xff, 0
 /** Offset for register IEEE_ADDR_5 */
 #define RG_IEEE_ADDR_5                   (0x29)
-/** Access parameters for sub-register IEEE_ADDR_5 in register @ref RG_IEEE_ADDR_5 */
-#define SR_IEEE_ADDR_5               0x29, 0xff, 0
 /** Offset for register IEEE_ADDR_6 */
 #define RG_IEEE_ADDR_6                   (0x2a)
-/** Access parameters for sub-register IEEE_ADDR_6 in register @ref RG_IEEE_ADDR_6 */
-#define SR_IEEE_ADDR_6               0x2a, 0xff, 0
 /** Offset for register IEEE_ADDR_7 */
 #define RG_IEEE_ADDR_7                   (0x2b)
-/** Access parameters for sub-register IEEE_ADDR_7 in register @ref RG_IEEE_ADDR_7 */
-#define SR_IEEE_ADDR_7               0x2b, 0xff, 0
 /** @} */
 /**
    @name Registers that hold the node's CSMA seed value.
