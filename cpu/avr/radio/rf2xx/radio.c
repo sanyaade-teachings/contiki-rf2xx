@@ -9,6 +9,10 @@
  *      Kevin Brown kbrown3@uccs.edu
  *      Nate Bohlmann nate@elfwerks.com
  *
+ *  ATMEL RUM v1.0.0 porting by:
+ *
+ *      Ilya Dmitrichenko errordeveloper@gmail.com
+ *
  *   All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
@@ -51,10 +55,19 @@
 
 /**  \addtogroup wireless
  * @{
+ *
+ * The radio interface is a driver for the Atmel 802.15.4 radio chips.
+ * This code works with the AT86RF230, 'RF231, and 'RF212 chips.
+ *
+ * This driver code is fairly modular, and can be modified to be used
+ * without the RUM MAC layer that lies on top.
+ *
+ * The radio interface involves an SPI port and several digital I/O
+ * lines.  See the radio chip datasheet for details.
  */
 
 /**
- *  \defgroup radiorf230 RF230 interface
+ *  \defgroup radiorf2xx RF2xx interface
  * @{
  */
 /**
@@ -112,13 +125,13 @@ static hal_trx_end_isr_event_handler_t user_trx_end_event;
 static radio_rx_callback rx_frame_callback;
 static uint8_t rssi_val;
 static uint8_t rx_mode;
-uint8_t rxMode = RX_AACK_ON;
+/* uint8_t rxMode = RX_AACK_ON;*/
 
 /* See clock.c and httpd-cgi.c for RADIOSTATS code */
 #define RADIOSTATS 0
 #if RADIOSTATS
-uint8_t RF230_radio_on, RF230_rsigsi;
-uint16_t RF230_sendpackets,RF230_receivepackets,RF230_sendfail,RF230_receivefail;
+uint8_t RF2xx_radio_on, RF2xx_rsigsi;
+uint16_t RF2xx_sendpackets, RF2xx_receivepackets, RF2xx_sendfail, RF2xx_receivefail;
 #endif
 
 static hal_rx_frame_t rx_frame;
@@ -162,7 +175,7 @@ radio_status_t
 radio_init(bool cal_rc_osc,
            hal_rx_start_isr_event_handler_t rx_event,
            hal_trx_end_isr_event_handler_t trx_end_event,
-           radio_rx_callback rx_callback)
+           radio_rx_callback rx_callback) /* PORTREF: line 124 */
 {
     radio_status_t init_status = RADIO_SUCCESS;
 
@@ -180,7 +193,8 @@ radio_init(bool cal_rc_osc,
 
     /* Force transition to TRX_OFF. */
     hal_subregister_write(SR_TRX_CMD, CMD_FORCE_TRX_OFF);
-    delay_us(TIME_P_ON_TO_TRX_OFF); /* Wait for the transition to be complete. */
+    /* Wait for the transition to be complete. */
+    delay_us(TIME_P_ON_TO_TRX_OFF);
 
     if (radio_get_trx_state() != TRX_OFF){
         init_status = RADIO_TIMED_OUT;
@@ -197,12 +211,12 @@ radio_init(bool cal_rc_osc,
                 hal_register_write(RG_IRQ_MASK, RF230_SUPPORTED_INTERRUPT_MASK);
         }
 #if RADIOSTATS
-        RF230_radio_on = 1;
+        RF2xx_radio_on = 1;
 #endif
     }
 
-    /*  set callbacks for events.  Save user's rx_event, which we will */
-    /*  call from radio_rx_start_event().  Same with trx_end */
+    /*  Set callbacks for events.  Save user's rx_event, which we will */
+    /*  call from radio_rx_start_event().  Same with trx_end. */
     user_rx_event = rx_event;
     user_trx_end_event = trx_end_event;
     hal_set_rx_start_event_handler(radio_rx_start_event);
@@ -263,6 +277,16 @@ radio_get_saved_rssi_value(void) /* PORTREF: line 198 */
 {
     return rssi_val;
 }
+/*---------------------------------------------------------------------------*/
+/**\brief Retrieves the saved LQI (Link Quality Indication) value.
+   The value returned is the LQI for the last packet received.
+
+   \return The LQI value, which ranges from 0 to 255.
+*/
+u8 radio_get_saved_lqi_value(void) /* PORTREF: line 209 */
+{
+    return ((rx_frame_t*)mac_buffer_rx)->lqi; /* TODO: check if this works with the DS */
+}
 
 /*---------------------------------------------------------------------------*/
 static void
@@ -278,8 +302,8 @@ radio_trx_end_event(uint32_t const isr_timestamp)
     if (rx_mode){
         /* radio has received frame, store it away */
 #if RADIOSTATS
-        RF230_rsigsi=rssi_val;
-        RF230_receivepackets++;
+        RF2xx_rsigsi=rssi_val;
+        RF2xx_receivepackets++;
 #endif
         parsed_frame.time = isr_timestamp;
         parsed_frame.rssi = rssi_val;
@@ -291,7 +315,7 @@ radio_trx_end_event(uint32_t const isr_timestamp)
     if (!rx_mode){
         /*  Put radio back into receive mode. */
         radio_set_trx_state(TRX_OFF);
-        radio_set_trx_state(rxMode);
+        radio_set_trx_state(RX_AACK_ON); /* radio_set_trx_state(rxMode); */
 
         /*  transmit mode, put end-of-transmit event in queue */
         event_object_t event;
@@ -307,7 +331,7 @@ radio_trx_end_event(uint32_t const isr_timestamp)
         case TRAC_CHANNEL_ACCESS_FAILURE:
             event.event = MAC_EVENT_NACK;
 #if RADIOSTATS
-        RF230_sendfail++;
+        RF2xx_sendfail++;
 #endif
             break;
         case TRAC_SUCCESS_WAIT_FOR_ACK:
@@ -316,7 +340,7 @@ radio_trx_end_event(uint32_t const isr_timestamp)
             /*  should never happen here */
         default:
 #if RADIOSTATS
-            RF230_sendfail++;
+            RF2xx_sendfail++;
 #endif
             break;
         }
@@ -520,6 +544,8 @@ radio_get_rssi_value(uint8_t *rssi) /* PORTREF: line 597 */
     return retval;
 }
 
+/*============================================================================*/
+/*= Section: Batter Monitor ==================================================*/
 /*----------------------------------------------------------------------------*/
 /** \brief This function returns the current threshold volatge used by the
  *         battery monitor (BATMON_VTH).
@@ -530,7 +556,7 @@ radio_get_rssi_value(uint8_t *rssi) /* PORTREF: line 597 */
  *  \return Current threshold voltage, 0 to 15.
  */
 uint8_t
-radio_batmon_get_voltage_threshold(void)
+radio_batmon_get_voltage_threshold(void) /* PORTREF: line 495 */
 {
     return hal_subregister_read(SR_BATMON_VTH);
 }
@@ -545,7 +571,7 @@ radio_batmon_get_voltage_threshold(void)
  *  \retval 1 High voltage range selected.
  */
 uint8_t
-radio_batmon_get_voltage_range(void)
+radio_batmon_get_voltage_range(void) /* PORTREF: line 510 */
 {
     return hal_subregister_read(SR_BATMON_HR);
 }
@@ -609,6 +635,8 @@ radio_batmon_get_status(void) /* PORTREF: line 557 */
     return batmon_status;
 }
 
+/*============================================================================*/
+/*= Section: Clock Settings ==================================================*/
 /*----------------------------------------------------------------------------*/
 /** \brief This function returns the current clock setting for the CLKM pin.
  *
@@ -669,6 +697,8 @@ radio_set_clock_speed(bool direct, uint8_t clock_speed) /* PORTREF: line 635 */
     return RADIO_SUCCESS;
 }
 
+/*============================================================================*/
+/*= Section: Radio Callibration ==============================================*/
 /*----------------------------------------------------------------------------*/
 /** \brief  This function calibrates the Single Side Band Filter.
  *
@@ -939,7 +969,7 @@ radio_enter_sleep_mode(void) /* PORTREF: line 842 */
         hal_set_slptr_high();
         enter_sleep_status = RADIO_SUCCESS;
 #if RADIOSTATS
-        RF230_radio_on = 0;
+        RF2xx_radio_on = 0;
 #endif
     }
 
@@ -973,7 +1003,7 @@ radio_leave_sleep_mode(void) /* PORTREF: line 871 */
     if (radio_get_trx_state() == TRX_OFF){
         leave_sleep_status = RADIO_SUCCESS;
 #if RADIOSTATS
-        RF230_radio_on = 1;
+        RF2xx_radio_on = 1;
 #endif
     }
 
@@ -1047,7 +1077,7 @@ radio_send_data(uint8_t data_length, uint8_t *data)
     /*Check function parameters and current state.*/
     if (data_length > RF230_MAX_TX_FRAME_LENGTH){
 #if RADIOSTATS
-        RF230_sendfail++;
+        RF2xx_sendfail++;
 #endif
         return RADIO_INVALID_ARGUMENT;
     }
@@ -1056,7 +1086,7 @@ radio_send_data(uint8_t data_length, uint8_t *data)
         if ((radio_get_trx_state() == BUSY_TX) || (radio_get_trx_state() == BUSY_TX_ARET) )
         {
 #if RADIOSTATS
-        RF230_sendfail++;
+        RF2xx_sendfail++;
 #endif
         return RADIO_WRONG_STATE;
         }
@@ -1071,7 +1101,7 @@ radio_send_data(uint8_t data_length, uint8_t *data)
 
     hal_frame_write(data, data_length); /* Then write data to the frame buffer. */
 #if RADIOSTATS
-    RF230_sendpackets++;
+    RF2xx_sendpackets++;
 #endif
     return RADIO_SUCCESS;
 }

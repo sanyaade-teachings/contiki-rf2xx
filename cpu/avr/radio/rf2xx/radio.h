@@ -10,6 +10,10 @@
  *	Kevin Brown kbrown3@uccs.edu
  *	Nate Bohlmann nate@elfwerks.com
  *
+ *  ATMEL RUM v1.0.0 porting by:
+ *
+ *      Ilya Dmitrichenko errordeveloper@gmail.com
+ *
  *   All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
@@ -41,9 +45,8 @@
  *    \addtogroup radiorf2xx
  *   @{
  */
-/**
- *  \file
- *  \brief This file contains radio driver code.
+/**\file
+ * \brief This file contains radio driver code.
  *
  *   $Id: radio.h,v 1.2 2008/10/14 18:37:28 c_oflynn Exp $
  */
