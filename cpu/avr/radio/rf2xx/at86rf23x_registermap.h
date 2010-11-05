@@ -470,7 +470,8 @@
 #define SR_AACK_UPLD_RES_FT          0x17, 0x10, 4
 #define SR_AACK_FLTR_RES_FT          0x17, 0x20, 5
 #define SR_CC_BAND                   0x14, 0x07, 0
-#define SR_TX_AUTO_CRC_ON            0x04, 0x20, 5
+/* SR_TX_AUTO_CRC_ON has to be define in hal.h */
+/* #define SR_TX_AUTO_CRC_ON            0x04, 0x20, 5 */
 /**
    @name These registers control the radio's carrier frequency (RF212 only).
    @{

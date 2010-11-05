@@ -111,9 +111,12 @@
 #define SR_CHANNEL                   0x08, 0x1f, 0
 #define SR_CLKM_CTRL                 0x03, 0x07, 0
 #define SR_CLKM_SHA_SEL              0x03, 0x08, 3
+#define SR_CSMA_SEED_0               0x2d, 0xff, 0
+#define SR_CSMA_SEED_1               0x2e, 0x07, 0
 #define SR_DVDD_OK                   0x10, 0x04, 2
 #define SR_DVREG_EXT                 0x10, 0x08, 3
 #define SR_DVREG_TRIM                0x10, 0x03, 0
+#define SR_ED_LEVEL                  0x07, 0xff, 0
 #define SR_FTN_START                 0x18, 0x80, 7
 #define SR_FTNV                      0x18, 0x3f, 0
 #define SR_GC_TX_OFFS                0x16, 0x03, 0
