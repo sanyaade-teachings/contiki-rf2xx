@@ -45,9 +45,8 @@
 #ifndef PHY230_REGISTERMAP_EXTERNAL_H
 #define PHY230_REGISTERMAP_EXTERNAL_H
 
-/**
-   @name Radio Registers
-   @{
+/**\name Radio Registers
+   \{
 */
 #define HAVE_REGISTER_MAP (1)
 /** Offset for register TRX_STATUS */
@@ -107,8 +106,6 @@
 #define SR_CLKM_SHA_SEL              0x03, 0x08, 3
 /** Access parameters for sub-register CLKM_CTRL in register @ref RG_TRX_CTRL_0 */
 #define SR_CLKM_CTRL                 0x03, 0x07, 0
-/** Offset for register PHY_TX_PWR */
-#define RG_PHY_TX_PWR                    (0x05)
 /** Access parameters for sub-register TX_AUTO_CRC_ON in register @ref RG_PHY_TX_PWR.
     Note that the RF230 and RF231 have different register locations for this setting.
     This is the setting for the RF230 part.
@@ -119,13 +116,12 @@
     This is the setting for the RF231 part.
  */
 #define SR_TX_AUTO_CRC_ON_231            0x04, 0x20, 5
-
-#define SR_reserved_05_2             0x05, 0x70, 4
+/** Offset for register PHY_TX_PWR */
+#define RG_PHY_TX_PWR                    (0x05)
 /** Access parameters for sub-register TX_PWR in register @ref RG_PHY_TX_PWR */
 #define SR_TX_PWR                    0x05, 0x0f, 0
 /** Offset for register PHY_RSSI */
 #define RG_PHY_RSSI                      (0x06)
-#define SR_reserved_06_1             0x06, 0xe0, 5
 /** Access parameters for sub-register RSSI in register @ref RG_PHY_RSSI */
 #define SR_RSSI                      0x06, 0x1f, 0
 /** Access parameters for sub-register RND_VALUE in register @ref RG_PHY_RSSI */
@@ -148,20 +144,18 @@
 #define SR_CCA_CS_THRES              0x09, 0xf0, 4
 /** Access parameters for sub-register CCA_ED_THRES in register @ref RG_CCA_THRES */
 #define SR_CCA_ED_THRES              0x09, 0x0f, 0
-
 /** Offset for register TRX_CTRL_2 */
 #define RG_TRX_CTRL_2                    (0x0c)
 /** Access parameters for sub-register RX_SAFE_MODE in register @ref RG_TRX_CTRL_2 */
 #define SR_RX_SAFE_MODE              0x0c, 0x80, 7
-/** Access parameters for sub-register IRQ_MASK_MODE in register @ref RG_TRX_CTRL_1 */
-#define SR_IRQ_MASK_MODE             0x04, 0x02, 1
-
 /** Offset for register IRQ_MASK */
 #define RG_IRQ_MASK                      (0x0e)
 /** Access parameters for sub-register IRQ_MASK in register @ref RG_IRQ_MASK */
 #define SR_IRQ_MASK                  0x0e, 0xff, 0
 /** Offset for register IRQ_STATUS */
 #define RG_IRQ_STATUS                    (0x0f)
+/** Access parameters for sub-register IRQ_MASK_MODE in register @ref RG_TRX_CTRL_1 */
+#define SR_IRQ_MASK_MODE             0x04, 0x02, 1
 /** Offset for register VREG_CTRL */
 #define RG_VREG_CTRL                     (0x10)
 /** Access parameters for sub-register AVREG_EXT in register @ref RG_VREG_CTRL */
@@ -178,6 +172,8 @@
 #define SR_DVREG_TRIM                0x10, 0x03, 0
 /** Offset for register BATMON */
 #define RG_BATMON                        (0x11)
+#define SR_reserved_05_2             0x05, 0x70, 4
+#define SR_reserved_06_1             0x06, 0xe0, 5
 #define SR_reserved_11_1             0x11, 0xc0, 6
 /** Access parameters for sub-register BATMON_OK in register @ref RG_BATMON */
 #define SR_BATMON_OK                 0x11, 0x20, 5
@@ -197,9 +193,8 @@
 #define SR_XTAL_MODE                 0x12, 0xf0, 4
 /** Access parameters for sub-register XTAL_TRIM in register @ref RG_XOSC_CTRL */
 #define SR_XTAL_TRIM                 0x12, 0x0f, 0
-
+/** DOCTODO */
 #define SR_AACK_ACK_TIME             0x17, 0x04, 2
-
 /** Offset for register FTN_CTRL */
 #define RG_FTN_CTRL                      (0x18)
 /** Access parameters for sub-register FTN_START in register @ref RG_FTN_CTRL */
@@ -251,10 +246,8 @@
 #define SR_reserved_2e_2             0x2e, 0x30, 4
 /** Access parameters for sub-register I_AM_COORD in register @ref RG_CSMA_SEED_1 */
 #define SR_I_AM_COORD                0x2e, 0x08, 3
-/** @} */
-
-/**
-   \name Radio commands.
+/** \} */
+/**\name Radio commands.
    See \ref SR_TRX_CMD and radio datasheet for details.
    \{
 */
@@ -275,8 +268,7 @@
 /** Constant CMD_TX_ARET_ON for sub-register @ref SR_TRX_CMD */
 #define CMD_TX_ARET_ON           (25)
 /** \} */
-/**
-   \name Constants for CLKM current.
+/**\name Constants for CLKM current.
    See \ref SR_PAD_IO_CLKM.
    \{
 */
@@ -289,11 +281,10 @@
 /** Constant CLKM_8mA for sub-register @ref SR_PAD_IO_CLKM */
 #define CLKM_8mA                 (3)
 /** \} */
-/**
-   @name Constants that define the CLKM frequency.
+/**\name Constants that define the CLKM frequency.
 
-   See @ref SR_CLKM_CTRL and radio datasheet.
-   @{
+   See \ref SR_CLKM_CTRL and radio datasheet.
+   \{
 */
 /** Constant CLKM_no_clock for sub-register @ref SR_CLKM_CTRL */
 #define CLKM_no_clock            (0)
@@ -307,10 +298,9 @@
 #define CLKM_8MHz                (4)
 /** Constant CLKM_16MHz for sub-register @ref SR_CLKM_CTRL */
 #define CLKM_16MHz               (5)
-/** @} */
-/**
-   @name Constants that define the bits in IRQ_STATUS register.
-   @{
+/** \} */
+/**\name Constants that define the bits in IRQ_STATUS register.
+   \{
 */
 /** Access parameters for sub-register IRQ_7_BAT_LOW in register @ref RG_IRQ_STATUS */
 #define SR_IRQ_7_BAT_LOW             0x0f, 0x80, 7
@@ -328,10 +318,9 @@
 #define SR_IRQ_1_PLL_UNLOCK          0x0f, 0x02, 1
 /** Access parameters for sub-register IRQ_0_PLL_LOCK in register @ref RG_IRQ_STATUS */
 #define SR_IRQ_0_PLL_LOCK            0x0f, 0x01, 0
-/** @} */
-/**
-   @name Constants that define the values in the AVREG_TRIM sub-register.
-   @{
+/** \} */
+/**\name Constants that define the values in the AVREG_TRIM sub-register.
+   \{
 */
 /** Constant AVREG_1_80V for sub-register @ref SR_AVREG_TRIM */
 #define AVREG_1_80V              (0)
@@ -341,10 +330,9 @@
 #define AVREG_1_84V              (2)
 /** Constant AVREG_1_88V for sub-register @ref SR_AVREG_TRIM */
 #define AVREG_1_88V              (3)
-/** @} */
-/**
-   @name Constants that define the values for the DVREG_TRIM sub-register.
-   @{
+/** \} */
+/**\name Constants that define the values for the DVREG_TRIM sub-register.
+   \{
 */
 /** Constant DVREG_1_80V for sub-register @ref SR_DVREG_TRIM */
 #define DVREG_1_80V              (0)
@@ -354,21 +342,19 @@
 #define DVREG_1_84V              (2)
 /** Constant DVREG_1_88V for sub-register @ref SR_DVREG_TRIM */
 #define DVREG_1_88V              (3)
-/** @} */
-/**
-    @name Constants that define the different part numbers.
+/** \} */
+/**\name Constants that define the different part numbers.
 
-    See @ref RG_PART_NUM and radio chip datasheet for correct values.
+    See \ref RG_PART_NUM and radio chip datasheet for correct values.
 
-    @{
+    \{
 */
 #define RF230                    (2)   ///< Value for AT86RF230
 #define RF231                    (3)   ///< Value for AT86RF231
 #define RF212                    (7)   ///< Value for AT86RF212
-/** @} */
-/**
-   @name Registers that hold the node's short address in the radio.
-   @{
+/** \} */
+/**\name Registers that hold the node's short address in the radio.
+   \{
 */
 /** Offset for register SHORT_ADDR_0 */
 #define RG_SHORT_ADDR_0                  (0x20)
@@ -378,10 +364,9 @@
 #define RG_SHORT_ADDR_1                  (0x21)
 /** Access parameters for sub-register SHORT_ADDR_1 in register @ref RG_SHORT_ADDR_1 */
 #define SR_SHORT_ADDR_1              0x21, 0xff, 0
-/** @} */
-/**
-   @name Registers that hold the node's PAN ID in the radio.
-   @{
+/** \} */
+/**\name Registers that hold the node's PAN ID in the radio.
+   \{
 */
 /** Offset for register PAN_ID_0 */
 #define RG_PAN_ID_0                      (0x22)
@@ -391,10 +376,9 @@
 #define RG_PAN_ID_1                      (0x23)
 /** Access parameters for sub-register PAN_ID_1 in register @ref RG_PAN_ID_1 */
 #define SR_PAN_ID_1                  0x23, 0xff, 0
-/** @} */
-/**
-   @name Registers that hold the node's MAC Address in the radio.
-   @{
+/** \} */
+/**\name Registers that hold the node's MAC Address in the radio.
+   \{
 */
 /** Offset for register IEEE_ADDR_0 */
 #define RG_IEEE_ADDR_0                   (0x24)
@@ -428,7 +412,7 @@
 #define RG_IEEE_ADDR_7                   (0x2b)
 /** Access parameters for sub-register IEEE_ADDR_7 in register @ref RG_IEEE_ADDR_7 */
 #define SR_IEEE_ADDR_7               0x2b, 0xff, 0
-/** @} */
+/** \} */
 /**\name Registers that hold the node's CSMA seed value.
    \{
 */
@@ -451,20 +435,20 @@
 #define MIN_CHANNEL  (11)
 #define MAX_CHANNEL  (26)
 /** \} */
-
-// Dummy defines to make code compile
-/** @name Definition of the modulation parameters for the RF212 chip.
+/** Dummy defines to make code compile. */
+/**\name Definition of the modulation parameters for the RF212 chip.
     These parameters get written to RG_TRX_CTRL_2 to set the
     modulation mode.  Note that many more modes are possible, but only
     the modes allowed by IEEE 802.15.4 are shown here.  See the RF212
-    datasheet for the other modes.  @ingroup radio_registers @{
+    datasheet for the other modes.
+    @ingroup radio_registers \{
 */
-#define BPSK_20         0x20     ///< 20 Kbps
-#define BPSK_40         0x24     ///< 40 Kbps
-#define OQPSK_100       0x08     ///< 100 Kbps
-#define OQPSK_SIN_250   0x2c     ///< 250 Kbps, half-sine filtering
-#define OQPSK_RC_250    0x1c     ///< 250 Kbps, RC filtering
-/** @} */
+#define BPSK_20         0x20     /**< 20 Kbps */
+#define BPSK_40         0x24     /**< 40 Kbps */
+#define OQPSK_100       0x08     /**< 100 Kbps */
+#define OQPSK_SIN_250   0x2c     /**< 250 Kbps, half-sine filtering */
+#define OQPSK_RC_250    0x1c     /**< 250 Kbps, RC filtering */
+/** /} */
 #define SR_GC_TX_OFFS                0x16, 0x03, 0
 #define RG_RF_CTRL_0                 (0x16)
 #define SR_AACK_UPLD_RES_FT          0x17, 0x10, 4
@@ -473,14 +457,14 @@
 /* SR_TX_AUTO_CRC_ON has to be define in hal.h */
 /* #define SR_TX_AUTO_CRC_ON            0x04, 0x20, 5 */
 /**
-   @name These registers control the radio's carrier frequency (RF212 only).
-   @{
+   \name These registers control the radio's carrier frequency (RF212 only).
+   \{
 */
-#define RG_CC_CTRL_0                      (0x13)  ///< Channel control register 0
-#define RG_CC_CTRL_1                      (0x14)  ///< Channel control register 1
-/** @} */
+#define RG_CC_CTRL_0                      (0x13)  /**< Channel control register 0 */
+#define RG_CC_CTRL_1                      (0x14)  /**< Channel control register 1 */
+/** \} */
 
-/** @} */ // End of radio_registers
-/** @} */ // End of addtogroup radio
+/** \} */ // End of radio_registers
+/** \} */ // End of addtogroup radio
 
 #endif /* PHY230_REGISTERMAP_EXTERNAL_H */
