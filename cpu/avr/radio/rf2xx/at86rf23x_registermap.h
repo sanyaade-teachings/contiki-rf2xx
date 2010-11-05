@@ -132,6 +132,8 @@
 #define SR_RND_VALUE                 0x06, 0x60, 5
 /** Offset for register PHY_ED_LEVEL */
 #define RG_PHY_ED_LEVEL                  (0x07)
+/** Access parameters for sub-register ED_LEVEL in register @ref RG_PHY_ED_LEVEL */
+#define SR_ED_LEVEL                  0x07, 0xff, 0
 /** Offset for register PHY_CC_CCA */
 #define RG_PHY_CC_CCA                    (0x08)
 /** Access parameters for sub-register CCA_REQUEST in register @ref RG_PHY_CC_CCA */
@@ -427,25 +429,28 @@
 /** Access parameters for sub-register IEEE_ADDR_7 in register @ref RG_IEEE_ADDR_7 */
 #define SR_IEEE_ADDR_7               0x2b, 0xff, 0
 /** @} */
-/**
-   @name Registers that hold the node's CSMA seed value.
-   @{
+/**\name Registers that hold the node's CSMA seed value.
+   \{
 */
 /** Offset for register CSMA_SEED_0 */
 #define RG_CSMA_SEED_0                   (0x2d)
+/** Access parameters for sub-register CSMA_SEED_0 in register @ref RG_CSMA_SEED_0 */
+#define SR_CSMA_SEED_0               0x2d, 0xff, 0
 /** Offset for register CSMA_SEED_1 */
 #define RG_CSMA_SEED_1                   (0x2e)
-/** @} */
-/** @name Channel range definitions
+/** Access parameters for sub-register CSMA_SEED_1 in register @ref RG_CSMA_SEED_1 */
+#define SR_CSMA_SEED_1               0x2e, 0x07, 0
+/** \} */
+/**\name Channel range definitions
 
     These two macros define the lowest and highest channel for a given
     band.  Possible channels are 0-10 (900MHz band) and 11-26 (2.4GHz
     band).
-    @{
+    \{
  */
 #define MIN_CHANNEL  (11)
 #define MAX_CHANNEL  (26)
-/** @} */
+/** \} */
 
 // Dummy defines to make code compile
 /** @name Definition of the modulation parameters for the RF212 chip.
