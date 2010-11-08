@@ -42,11 +42,11 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 /**
- *    \addtogroup radiorf2xx
+ *    \addtogroup wireless
  *   @{
  */
 /**\file
- * \brief This file contains radio driver code.
+ * \brief This file contains radio driver macros, typedefs and function prototypes.
  *
  *   $Id: radio.h,v 1.2 2008/10/14 18:37:28 c_oflynn Exp $
  */
@@ -60,6 +60,7 @@
 #include "hal.h"
 
 /*============================ MACROS ========================================*/
+/* TODO: this has to be adjusted in accordance to hal.c */
 #define SUPPORTED_PART_NUMBER                   ( 2 )
 #define SUPPORTED_MANUFACTURER_ID               ( 31 )
 #define RF230_SUPPORTED_INTERRUPT_MASK          ( 0x0C )
@@ -76,6 +77,14 @@
 #define TX_PWR_3DBM                             ( 0 )
 #define TX_PWR_17_2DBM                          ( 15 )
 
+#define RADIO_CCA_DONE_MASK     (1 << 7) /**<  Mask used to check the CCA_DONE bit. */
+#define RADIO_CCA_IDLE_MASK     (1 << 6) /**<  Mask used to check the CCA_STATUS bit. */
+#define RADIO_START_CCA		(1) /**<  Value in the CCA_REQUEST subregister that initiate a cca. */
+
+#define RADIO_TRANSMISSION_SUCCESS  (0)
+#define RADIO_BUSY_CHANNEL          (3)
+#define RADIO_MIN_IEEE_FRAME_LENGTH (5)
+
 #define BATTERY_MONITOR_HIGHEST_VOLTAGE         ( 15 )
 #define BATTERY_MONITOR_VOLTAGE_UNDER_THRESHOLD ( 0 )
 #define BATTERY_MONITOR_HIGH_VOLTAGE            ( 1 )
@@ -87,7 +96,8 @@
 
 #define RC_OSC_REFERENCE_COUNT_MAX  (1.005*F_CPU*31250UL/8000000UL)
 #define RC_OSC_REFERENCE_COUNT_MIN  (0.995*F_CPU*31250UL/8000000UL)
-/*============================ TYPEDEFS ======================================*/
+
+#define delay_us( us )   ( _delay_loop_2( ( F_CPU / 4000000UL ) * ( us ) ) )
 
 /** \brief  This macro defines the start value for the RADIO_* status constants.
  *
@@ -99,6 +109,20 @@
  *  \see radio_status_t
  */
 #define RADIO_STATUS_START_VALUE                  ( 0x40 )
+
+/**
+ * \name Transaction status codes
+ * \{
+ */
+#define TRAC_SUCCESS                0
+#define TRAC_SUCCESS_DATA_PENDING   1
+#define TRAC_SUCCESS_WAIT_FOR_ACK   2
+#define TRAC_CHANNEL_ACCESS_FAILURE 3
+#define TRAC_NO_ACK                 5
+#define TRAC_INVALID                7
+/** \} */
+
+/*============================ TYPEDEFS ======================================*/
 
 /** \brief  This enumeration defines the possible return values for the TAT API
  *          functions.
@@ -124,20 +148,6 @@ typedef enum{
     RADIO_CHANNEL_ACCESS_FAILURE,     /**< The channel access failed during the auto mode. */
     RADIO_NO_ACK,                     /**< No acknowledge frame was received. */
 }radio_status_t;
-
-
-/**
- * \name Transaction status codes
- * \{
- */
-#define TRAC_SUCCESS                0
-#define TRAC_SUCCESS_DATA_PENDING   1
-#define TRAC_SUCCESS_WAIT_FOR_ACK   2
-#define TRAC_CHANNEL_ACCESS_FAILURE 3
-#define TRAC_NO_ACK                 5
-#define TRAC_INVALID                7
-/** \} */
-
 
 /** \brief  This enumeration defines the possible modes available for the
  *          Clear Channel Assessment algorithm.
@@ -166,60 +176,99 @@ typedef enum{
     CLKM_16MHZ         = 5
 }radio_clkm_speed_t;
 
+/** \brief  This enumeration defines the necessary timing information for the
+ *          AT86RF230 radio transceiver. All times are in microseconds.
+ *
+ *          These constants are extracted from the datasheet.
+ */
+typedef enum{
+    TIME_TO_ENTER_P_ON               = 510, /**<  Transition time from VCC is applied to P_ON. */
+    TIME_P_ON_TO_TRX_OFF             = 510, /**<  Transition time from P_ON to TRX_OFF. */
+    TIME_SLEEP_TO_TRX_OFF            = 880, /**<  Transition time from SLEEP to TRX_OFF. */
+    TIME_RESET                       = 6,   /**<  Time to hold the RST pin low during reset */
+    TIME_ED_MEASUREMENT              = 140, /**<  Time it takes to do a ED measurement. */
+    TIME_CCA                         = 140, /**<  Time it takes to do a CCA. */
+    TIME_PLL_LOCK                    = 150, /**<  Maximum time it should take for the PLL to lock. */
+    TIME_FTN_TUNING                  = 25,  /**<  Maximum time it should take to do the filter tuning. */
+    TIME_NOCLK_TO_WAKE               = 6,   /**<  Transition time from *_NOCLK to being awake. */
+    TIME_CMD_FORCE_TRX_OFF           = 1,   /**<  Time it takes to execute the FORCE_TRX_OFF command. */
+    TIME_TRX_OFF_TO_PLL_ACTIVE       = 180, /**<  Transition time from TRX_OFF to: RX_ON, PLL_ON, TX_ARET_ON and RX_AACK_ON. */
+    TIME_STATE_TRANSITION_PLL_ACTIVE = 1,   /**<  Transition time from PLL active state to another. */
+    TIME_RESET_TRX_OFF               = 37,  /**<  Transition time from RESET to TRX_OFF. */
+}radio_trx_timing_t; /* PORTREF: line 79 */
+
 typedef void (*radio_rx_callback) (uint16_t data);
-extern uint8_t rxMode;
+
+/* TODO: this needs to be checked if it's needed */
+/* extern uint8_t rxMode; */
+
 /*============================ PROTOTYPES ====================================*/
+
+/* == Initialization == */
 radio_status_t radio_init(bool cal_rc_osc,
                           hal_rx_start_isr_event_handler_t rx_event,
                           hal_trx_end_isr_event_handler_t trx_end_event,
                           radio_rx_callback rx_callback);
-uint8_t             radio_get_saved_rssi_value(void);
-uint8_t             radio_get_operating_channel( void );
-radio_status_t radio_set_operating_channel( uint8_t channel );
-uint8_t             radio_get_tx_power_level( void );
-radio_status_t radio_set_tx_power_level( uint8_t power_level );
 
-uint8_t             radio_get_cca_mode( void );
-uint8_t             radio_get_ed_threshold( void );
-radio_status_t radio_set_cca_mode( uint8_t mode, uint8_t ed_threshold );
-radio_status_t radio_do_cca( void );
-radio_status_t radio_get_rssi_value( uint8_t *rssi );
+radio_status_t	radio_do_cca( void ); /* TODO: this will have to be implemented! */
 
-uint8_t             radio_batmon_get_voltage_threshold( void );
-uint8_t             radio_batmon_get_voltage_range( void );
-radio_status_t radio_batmon_configure( bool range, uint8_t voltage_threshold );
-radio_status_t radio_batmon_get_status( void );
+/* == Store and Read == */
+uint8_t		radio_get_part_number( void );
+uint8_t		radio_get_operating_channel( void );
+radio_status_t	radio_set_operating_channel( uint8_t channel );
+uint8_t		radio_get_device_role( void );
+void		radio_set_device_role( bool i_am_coordinator );
+uint16_t	radio_get_pan_id( void );
+void		radio_set_pan_id( uint16_t new_pan_id );
+uint16_t	radio_get_short_address( void );
+void		radio_set_short_address( uint16_t new_short_address );
+void		radio_get_extended_address( uint8_t *extended_address );
+void		radio_set_extended_address( uint8_t *extended_address );
+uint8_t		radio_get_tx_power_level( void );
+radio_status_t	radio_set_tx_power_level( uint8_t power_level );
+uint8_t		radio_get_cca_mode( void );
+radio_status_t	radio_set_cca_mode( uint8_t mode, uint8_t ed_threshold );
+radio_status_t	radio_get_rssi_value( uint8_t *rssi );
+uint8_t		radio_get_saved_rssi_value( void );
+uint8_t		radio_get_saved_lqi_value ( void );
+uint8_t		radio_get_ed_threshold( void );
 
-uint8_t             radio_get_clock_speed( void );
-radio_status_t radio_set_clock_speed( bool direct, uint8_t clock_speed );
-radio_status_t radio_calibrate_filter( void );
-radio_status_t radio_calibrate_pll( void );
+/* == Battery Monitor ==*/
+radio_status_t	radio_batmon_configure( bool range, uint8_t voltage_threshold );
+radio_status_t	radio_batmon_get_status( void );
+uint8_t		radio_batmon_get_voltage_threshold( void );
+uint8_t		radio_batmon_get_voltage_range( void );
 
-uint8_t             radio_get_trx_state( void );
-radio_status_t radio_set_trx_state( uint8_t new_state );
-radio_status_t radio_enter_sleep_mode( void );
-radio_status_t radio_leave_sleep_mode( void );
-void           radio_reset_state_machine( void );
-void           radio_reset_trx( void );
+/* == Clock Settings == */
+uint8_t		radio_get_clock_speed( void );
+radio_status_t	radio_set_clock_speed( bool direct, uint8_t clock_speed );
 
-void           radio_use_auto_tx_crc( bool auto_crc_on );
+/* == Radio Callibration ==*/
+radio_status_t	radio_calibrate_filter( void );
+radio_status_t	radio_calibrate_pll( void );
+bool		calibrate_rc_osc_clkm( void );
+void		calibrate_rc_osc_32k( void );
+
+/* == States and Transitions ==*/
+static void radio_rx_start_event(uint32_t const isr_timestamp, uint8_t const frame_length);
+static void radio_trx_end_event(uint32_t const isr_timestamp);
+
+uint8_t		radio_get_trx_state( void );
+radio_status_t	radio_set_trx_state( uint8_t new_state );
+bool		radio_is_sleeping( void );
+radio_status_t	radio_enter_sleep_mode( void );
+radio_status_t	radio_leave_sleep_mode( void );
+void		radio_reset_state_machine( void );
+void		radio_reset_trx( void );
+
+/* == Data Transmission ==*/
+uint8_t      * radio_frame_data( void );
+uint8_t        radio_frame_length( void );
 radio_status_t radio_send_data( uint8_t data_length, uint8_t *data );
-
-uint8_t             radio_get_device_role( void );
-void           radio_set_device_role( bool i_am_coordinator );
-uint16_t            radio_get_pan_id( void );
-void           radio_set_pan_id( uint16_t new_pan_id );
-uint16_t            radio_get_short_address( void );
-void           radio_set_short_address( uint16_t new_short_address );
-void           radio_get_extended_address( uint8_t *extended_address );
-void           radio_set_extended_address( uint8_t *extended_address );
+void           radio_use_auto_tx_crc( bool auto_crc_on );
 radio_status_t radio_configure_csma( uint8_t seed0, uint8_t be_csma_seed1 );
-bool           calibrate_rc_osc_clkm(void);
-void           calibrate_rc_osc_32k(void);
-uint8_t * radio_frame_data(void);
-uint8_t radio_frame_length(void);
-#define delay_us( us )   ( _delay_loop_2( ( F_CPU / 4000000UL ) * ( us ) ) )
 
-#endif
+
+#endif /* RADIO_H */
 /** @} */
 /*EOF*/
