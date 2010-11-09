@@ -1,0 +1,46 @@
+** radio.[ch]: //--------------------------------------------------
+
+= Initialization ==================================================
+     	Function called radio_init() is defined here, it takes
+     	various parameters and it callibrate the oscillator.
+     	
+= Store and Read ==================================================
+     	Storing and reding of variables such as RSSI, LQI and
+     	network address registers.
+
+= Battery Monitor =================================================
+     	On-chip battery monitor settings can be performed with
+     	functions defined in this sections.
+
+= Clock Settings ==================================================
+     	This section provides function for setting up the clock.
+
+= Radio Callibration ==============================================
+     	The driver can callibrate oscillator, filter and PLL.
+
+= States and Transitions ==========================================
+     	The complexity of state machine of the driver is habled
+     	by functions functions defined in this section.
+
+= Data Transmission ===============================================
+     	This sections defines functions used to transmit data.
+
+** hal.[ch]: //----------------------------------------------------
+
+= Initialization ==================================================
+      	Hardware initialization mainly involves flag resets,
+      	register configuration and SPI set-up.
+
+= Flags ===========================================================
+      	This section provides functions to trigger various falgs
+      	used by the Hardware Abstraction Layer (HAL)
+
+= Handlers for States and Transitions =============================
+      	This section provides transmission evens hadling functions.
+
+= Register and Memory Access ======================================
+	This section defines function for hardware independednt
+	transciever register and memory access function.
+
+= Radio Interrupt Routine =========================================
+	The Interrupt Service Routine is defined for RADIO_VECT.

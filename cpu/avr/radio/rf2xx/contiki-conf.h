@@ -1,0 +1,7 @@
+
+#define ATMEL_RADIO
+#define ATMEL_BOARD_SPEC	0
+
+#define ATMEL_SPI_INIT		1
+
+#define ATMEL_RADIO_ISR		0
