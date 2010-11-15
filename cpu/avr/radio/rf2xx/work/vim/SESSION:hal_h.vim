@@ -4,6 +4,7 @@ let s:cpo_save=&cpo
 set cpo&vim
 inoremap <silent> <S-Tab> =BackwardsSnippet()
 imap <F10> =strftime("%c")
+imap <F7> :VX
 imap <F5> :II
 imap <F4> :IIW
 imap <F3> :CheckSyntax
@@ -17,8 +18,8 @@ snoremap ' b<BS>'
 map Q gq
 xmap S <Plug>VSurround
 snoremap U b<BS>U
-nmap <silent> \aocom :AlignPush:AlignCtrl g /[*/]\acom:AlignPop
 nmap <silent> \t@ :AlignCtrl mIp1P1=l @:'a,.Align
+nmap <silent> \aocom :AlignPush:AlignCtrl g /[*/]\acom:AlignPop
 snoremap \ b<BS>\
 nmap <silent> \cv <Plug>VCSVimDiff
 nmap <silent> \cu <Plug>VCSUpdate
@@ -167,6 +168,7 @@ noremap <Plug>Comment :call EnhancedCommentify('', 'comment')
 nmap <SNR>37_WE <Plug>AlignMapsWrapperEnd
 nmap <SNR>37_WS <Plug>AlignMapsWrapperStart
 map <F10> A =strftime("%c")
+map <F7> :VX
 map <F5> :II
 map <F4> :IIW
 map <F3> :CheckSyntax
@@ -180,6 +182,10 @@ inoremap <silent> 	 =TriggerSnippet()
 inoremap <silent> 	 =ShowAvailableSnips()
 imap  <Plug>Isurround
 inoremap  =GetCloseTag()
+noremap √õ :call Ri(expand('<cword>'), 1)
+noremap √ù :call Ri(expand('<cWORD>'), 0)
+noremap √â :call Ri('', 1)
+noremap √© :call Ri('', 0)
 noremap … :call Ri('', 1)
 noremap € :call Ri(expand('<cword>'), 1)
 imap <silent> \x <Plug>Traditional
@@ -189,8 +195,10 @@ noremap È :call Ri('', 0)
 let &cpo=s:cpo_save
 unlet s:cpo_save
 set autoindent
+set background=dark
 set backspace=2
 set fileencodings=ucs-bom,utf-8,default
+set helplang=en
 set history=50
 set hlsearch
 set nomodeline
@@ -206,11 +214,11 @@ if expand('%') == '' && !&modified && line('$') <= 1 && getline(1) == ''
   let s:wipebuf = bufnr('%')
 endif
 set shortmess=aoO
-badd +1007 ~/uni/ct3p60n/code/contiki-2.x/cpu/avr/radio/rf2xx/hal.h
+badd +950 ~/uni/ct3p60n/code/contiki-2.x/cpu/avr/radio/rf2xx/hal.h
 badd +1 ../rf230/hal.h
 badd +1 ../rum/hal.h
-badd +0 ../rum/sensors.h
-badd +0 ../rum/mac.h
+badd +1 ../rum/sensors.h
+badd +1 ../rum/mac.h
 silent! argdel *
 edit ~/uni/ct3p60n/code/contiki-2.x/cpu/avr/radio/rf2xx/hal.h
 set splitbelow splitright
@@ -226,11 +234,11 @@ set nosplitbelow
 set nosplitright
 wincmd t
 set winheight=1 winwidth=1
-exe '1resize ' . ((&lines * 24 + 25) / 51)
-exe '2resize ' . ((&lines * 23 + 25) / 51)
-exe 'vert 2resize ' . ((&columns * 79 + 79) / 158)
-exe '3resize ' . ((&lines * 23 + 25) / 51)
-exe 'vert 3resize ' . ((&columns * 78 + 79) / 158)
+exe '1resize ' . ((&lines * 36 + 35) / 71)
+exe '2resize ' . ((&lines * 31 + 35) / 71)
+exe 'vert 2resize ' . ((&columns * 71 + 71) / 142)
+exe '3resize ' . ((&lines * 31 + 35) / 71)
+exe 'vert 3resize ' . ((&columns * 70 + 71) / 142)
 argglobal
 setlocal keymap=
 setlocal noarabic
@@ -327,119 +335,118 @@ setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
 1,43fold
-60,68fold
-87,100fold
-108,116fold
-119,132fold
-149,157fold
-160,215fold
-218,283fold
-286,339fold
-342,388fold
-390,411fold
-414,473fold
-476,544fold
-547,598fold
-601,679fold
-682,751fold
-768,777fold
-780,806fold
-778,807fold
-814,818fold
-820,822fold
-824,827fold
-829,831fold
+60,71fold
+91,104fold
+112,120fold
+123,136fold
+153,161fold
+164,219fold
+222,287fold
+290,343fold
+346,392fold
+394,415fold
+418,477fold
+480,548fold
+551,602fold
+605,683fold
+686,755fold
+772,781fold
+784,810fold
+782,811fold
+818,822fold
+824,826fold
+828,831fold
 833,835fold
-837,844fold
-846,847fold
-813,849fold
-813,849fold
-851,855fold
-858,861fold
+837,839fold
+841,848fold
+850,851fold
+817,853fold
+817,853fold
+855,859fold
 862,865fold
 866,869fold
 870,873fold
 874,877fold
-856,881fold
-885,895fold
-898,911fold
-923,924fold
-926,931fold
-926,931fold
-934,942fold
-944,974fold
-993,995fold
-997,1002fold
-1004,1012fold
-1014,1035fold
+878,881fold
+860,885fold
+889,899fold
+902,915fold
+927,928fold
+930,935fold
+930,935fold
+938,946fold
+973,993fold
+995,1008fold
+1018,1024fold
+1027,1037fold
+1054,1056fold
+1059,1061fold
 1
 normal zc
 60
 normal zo
-87
+91
 normal zc
-108
+112
 normal zc
-119
+123
 normal zc
-149
+153
 normal zc
-160
+164
 normal zc
-218
+222
 normal zc
-286
+290
 normal zc
-342
+346
 normal zc
-390
+394
 normal zc
-414
+418
 normal zc
-476
+480
 normal zc
-547
+551
 normal zc
-601
+605
 normal zc
-682
+686
 normal zc
-768
+772
 normal zc
-778
+782
 normal zo
-780
+784
 normal zc
-778
+782
 normal zc
-813
+817
 normal zo
-813
+817
 normal zo
-814
-normal zc
-820
+818
 normal zc
 824
 normal zc
-829
+828
 normal zc
 833
 normal zc
 837
 normal zc
-846
+841
 normal zc
-813
+850
 normal zc
-813
+817
+normal zc
+817
 normal zo
-851
+855
 normal zc
-856
+860
 normal zo
-858
-normal zc
 862
 normal zc
 866
@@ -448,37 +455,41 @@ normal zc
 normal zc
 874
 normal zc
-856
+878
 normal zc
-885
+860
 normal zc
-898
+889
 normal zc
-923
+902
 normal zc
-926
+927
+normal zc
+930
 normal zo
-926
+930
 normal zc
-926
+930
 normal zo
-934
+938
 normal zc
-944
-normal zo
-993
+973
 normal zc
-997
+995
 normal zc
-1004
+1018
 normal zc
-1014
+1027
 normal zc
-let s:l = 1 - ((0 * winheight(0) + 12) / 24)
+1054
+normal zc
+1059
+normal zc
+let s:l = 141 - ((69 * winheight(0) + 18) / 36)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-1
+141
 normal! 0
 wincmd w
 argglobal
@@ -677,7 +688,7 @@ normal zc
 normal zc
 368
 normal zc
-let s:l = 1 - ((0 * winheight(0) + 11) / 23)
+let s:l = 1 - ((0 * winheight(0) + 15) / 31)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
@@ -899,19 +910,18 @@ normal zc
 normal zc
 807
 normal zc
-let s:l = 633 - ((0 * winheight(0) + 11) / 23)
+let s:l = 633 - ((0 * winheight(0) + 15) / 31)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
 633
 normal! 03l
 wincmd w
-3wincmd w
-exe '1resize ' . ((&lines * 24 + 25) / 51)
-exe '2resize ' . ((&lines * 23 + 25) / 51)
-exe 'vert 2resize ' . ((&columns * 79 + 79) / 158)
-exe '3resize ' . ((&lines * 23 + 25) / 51)
-exe 'vert 3resize ' . ((&columns * 78 + 79) / 158)
+exe '1resize ' . ((&lines * 36 + 35) / 71)
+exe '2resize ' . ((&lines * 31 + 35) / 71)
+exe 'vert 2resize ' . ((&columns * 71 + 71) / 142)
+exe '3resize ' . ((&lines * 31 + 35) / 71)
+exe 'vert 3resize ' . ((&columns * 70 + 71) / 142)
 tabedit ../rum/sensors.h
 set splitbelow splitright
 set nosplitbelow
@@ -1013,13 +1023,12 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 208 - ((48 * winheight(0) + 24) / 49)
+let s:l = 208 - ((68 * winheight(0) + 34) / 69)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
 208
 normal! 0
-3wincmd w
 tabedit ../rum/mac.h
 set splitbelow splitright
 set nosplitbelow
@@ -1121,13 +1130,12 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 659 - ((48 * winheight(0) + 24) / 49)
+let s:l = 659 - ((68 * winheight(0) + 34) / 69)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
 659
 normal! 0
-3wincmd w
 tabnext 1
 if exists('s:wipebuf')
   silent exe 'bwipe ' . s:wipebuf

@@ -63,9 +63,13 @@
 #include <stdlib.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
-#include <util/crc16.h>
+#ifdef HAL_CRC_CALC
+	#include <util/crc16.h>
+#endif
 #include <util/delay.h>
-#include <avr/eeprom.h>
+#ifdef HAL_EEPROM
+	#include <avr/eeprom.h>
+#endif
 #include "contiki-conf.h"
 
 /* TODO: adjust ATMEL_RADIO and the PLATFORM definitions below to work together */
@@ -1008,6 +1012,7 @@ typedef struct {
 /* == Initialization == */
 void hal_init( void );
 void hal_spi_init( void );
+void rf2xx_interrupt(void);
 
 /* == Flags == */
 #ifdef HAL_FLAGS
@@ -1045,14 +1050,19 @@ void hal_subregister_write( uint8_t address,
 			    uint8_t position,
                             uint8_t value );
 
+#ifdef HAL_SRAM
 void hal_sram_read( uint8_t address, uint8_t length, uint8_t *data );
 void hal_sram_write( uint8_t address, uint8_t length, uint8_t *data );
+#endif
 
+#ifdef HAL_EEPROM
 void hal_eeprom_read_block(uint8_t *addr, uint8_t length, uint8_t *dest);
 void hal_eeprom_write_block(uint8_t *addr, uint8_t length, uint8_t *src);
+#endif
 
 void hal_frame_read( hal_rx_frame_t *rx_frame, rx_callback_t rx_callback);
 void hal_frame_write( uint8_t *write_buffer, uint8_t length );
+
 
 #if 0 /* TODO */
 
