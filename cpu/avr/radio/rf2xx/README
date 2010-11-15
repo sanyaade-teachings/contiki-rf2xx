@@ -36,11 +36,16 @@
       	used by the Hardware Abstraction Layer (HAL)
 
 = Handlers for States and Transitions =============================
-      	This section provides transmission evens hadling functions.
+      	This section provides transmission evens hadling functions,
+	set/get/clear tupels for RX_START & TRX_END even callbacks.
 
 = Register and Memory Access ======================================
 	This section defines function for hardware independednt
 	transciever register and memory access function.
+	Including SRAM, EEPROM, system register and sub-registers,
+	radio frame registers. Most important is that HAL functions
+	take care of disabling interrupts by calling macros
+	AVR_ENTER_CRITICAL_REGION() & AVR_LEAVE_CRITICAL_REGION().
 
 = Radio Interrupt Routine =========================================
 	The Interrupt Service Routine is defined for RADIO_VECT.

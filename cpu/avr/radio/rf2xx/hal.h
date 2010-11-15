@@ -86,7 +86,8 @@
  * \brief These functions are implemented as macros since they are used very often.
  * \{
  */
-#define HAL_DUMMY_READ         (0x00) /**<  Dummy value for the SPI. */
+#define HAL_DUMMY_READ         (0x00) /**<  Dummy value for the SPI. *//* PORTLABLE: COMPAT */
+#define HAL_DUMMY_VALUE        (0x00) /**<  Dummy value. */
 
 #define HAL_TRX_CMD_RW         (0xC0) /**<  Register Write (short mode). */
 #define HAL_TRX_CMD_RR         (0x80) /**<  Register Read (short mode). */
@@ -941,6 +942,16 @@
  */
 #define hal_disable_trx_interrupt( ) HAL_DISABLE_RADIO_INTERRUPT( ) /* PORTREF: line 771 */
 
+
+/* #define DEBUG 0 */
+
+#if DEBUG
+volatile char rf2xx_interrupt_flag=0;
+#define INTERRUPTDEBUG(arg) rf230_interrupt_flag=arg
+#else
+#define INTERRUPTDEBUG(arg)
+#endif
+
 /*============================ TYPDEFS =======================================*/
 /**
  * \struct hal_rx_frame_t
@@ -954,6 +965,8 @@ typedef struct{
 	uint8_t lqi;	/**< LQI value for received frame. */
 	bool crc;	/**< Flag - did CRC pass for received frame? */
 } hal_rx_frame_t; /* PORTNOTE: Atmel doesn't have the hal_rx_frame_t here. */
+
+#ifdef HAL_HANDLERS
 
 /** RX_START event handler callback type.
  *		Is called with timestamp in IEEE 802.15.4 symbols and frame length.
@@ -972,6 +985,8 @@ typedef void (*hal_trx_end_isr_event_handler_t) /* PORTREF: line 793 */
 /** TODOC */
 typedef void (*rx_callback_t) /* PORTREF: line 795 */
 		(uint16_t data);
+
+#endif /* HAL_HANDLERS */
 
 #if 0 /* TODO */
 
@@ -995,13 +1010,16 @@ void hal_init( void );
 void hal_spi_init( void );
 
 /* == Flags == */
+#ifdef HAL_FLAGS
 void	hal_reset_flags( void );
 uint8_t	hal_get_bat_low_flag( void );
 void	hal_clear_bat_low_flag( void );
 uint8_t	hal_get_pll_lock_flag( void );
 void	hal_clear_pll_lock_flag( void );
+#endif /* HAL_FLAGS */
 
 /* == Handlers for States and Transitions == */
+#ifdef HAL_HANDLERS
 
 hal_trx_end_isr_event_handler_t hal_get_trx_end_event_handler( void );
 void hal_set_trx_end_event_handler( hal_trx_end_isr_event_handler_t trx_end_callback_handle );
@@ -1010,6 +1028,8 @@ void hal_clear_trx_end_event_handler( void );
 hal_rx_start_isr_event_handler_t hal_get_rx_start_event_handler( void );
 void hal_set_rx_start_event_handler( hal_rx_start_isr_event_handler_t rx_start_callback_handle );
 void hal_clear_rx_start_event_handler( void );
+
+#endif /* HAL_HANDLERS */
 
 /* == Register Access == */
 

@@ -9,6 +9,7 @@
  *	Mike Vidales mavida404@gmail.com
  *	Kevin Brown kbrown3@uccs.edu
  *	Nate Bohlmann nate@elfwerks.com
+ *	David Kopf dak664@embarqmail.com
  *  
  *  ATMEL RUM v1.0.0 porting by:
  *
@@ -59,6 +60,13 @@
  *  This file contains low-level radio driver code.
  */
 
+#ifndef HAL_MINIMAL		/** Dsaible/Ebnable all sections below: */
+	#define HAL_SRAM	/**< SRAM read/write */
+	#define HAL_FLAGS	/**< various flags */
+	#define HAL_EEPROM	/**< EEPROM block read/write */
+	#define HAL_HANDLERS	/**< TRX_END/RX_START event handlers */
+#endif
+
 /*============================ INCLUDE =======================================*/
 #include "hal.h"
 /*============================ VARIABLES =====================================*/
@@ -79,10 +87,17 @@ extern uint8_t rx_mode;
 static uint16_t hal_system_time = 0;
 
 /* Subsection: Flags */
+
+#ifdef HAL_FLAGS
+
 static uint8_t volatile hal_bat_low_flag; /**<  BAT_LOW flag. */
 static uint8_t volatile hal_pll_lock_flag;   /**<  PLL_LOCK flag. */
 
+#endif /* HAL_FLAGS */
+
 /* Subsection: Callbacks */
+
+#ifdef HAL_HANDLERS
 
 /** \brief This function is called when a rx_start interrupt is signaled.
  *
@@ -109,6 +124,7 @@ static hal_rx_start_isr_event_handler_t rx_start_callback;
  */
 static hal_trx_end_isr_event_handler_t trx_end_callback;
 
+#endif /* HAL_HANDLERS */
 
 /*============================ IMPLEMENTATION ================================*/
 
@@ -122,7 +138,9 @@ hal_init(void) /* PORTREF: line 95 */
 {
     /* Reset variables used in file. */
     hal_system_time = 0;
+    #ifdef HAL_FLAGS
     hal_reset_flags();
+    #endif
 
     /* IO Specific Initialization. */
     DDR_SLP_TR |= (1 << SLP_TR); /* Enable SLP_TR as output. */
@@ -173,6 +191,7 @@ void hal_spi_init(void) /* PORTREF: line 76 */
 
 /*============================================================================*/
 /*= Section: Flags ===========================================================*/
+#ifdef HAL_FLAGS
 /*----------------------------------------------------------------------------*/
 /** \brief  This function reset the interrupt flags and interrupt event handlers
  *          (Callbacks) to their default value.
@@ -240,12 +259,14 @@ hal_clear_pll_lock_flag(void)
     hal_pll_lock_flag = 0;
     AVR_LEAVE_CRITICAL_REGION();
 }
+#endif /* HAL_FLAGS */
 
 /*============================================================================*/
 /*= Section: Handlers for States and Transitions =============================*/
+#ifdef HAL_HANDLERS
+/*=================================================[TRX_END]==================*/
 /*----------------------------------------------------------------------------*/
-/** \brief  This function is used to set new TRX_END event handler, overriding
- *          old handler reference.
+/** \brief  This function is used to retrieve TRX_END event handler.
  */
 hal_trx_end_isr_event_handler_t
 hal_get_trx_end_event_handler(void)
@@ -254,8 +275,8 @@ hal_get_trx_end_event_handler(void)
 }
 
 /*----------------------------------------------------------------------------*/
-/** \brief  This function is used to set new TRX_END event handler, overriding
- *          old handler reference.
+/** \brief  This function is used to set new TRX_END event handler,
+ *					overriding old handler reference.
  */
 void
 hal_set_trx_end_event_handler(hal_trx_end_isr_event_handler_t trx_end_callback_handle)
@@ -266,7 +287,7 @@ hal_set_trx_end_event_handler(hal_trx_end_isr_event_handler_t trx_end_callback_h
 }
 
 /*----------------------------------------------------------------------------*/
-/** \brief  Remove event handler reference.
+/** \brief  Remove TRX_END event handler reference.
  */
 void
 hal_clear_trx_end_event_handler(void)
@@ -276,6 +297,7 @@ hal_clear_trx_end_event_handler(void)
     AVR_LEAVE_CRITICAL_REGION();
 }
 
+/*=================================================[RX_START]=================*/
 /*----------------------------------------------------------------------------*/
 /** \brief  This function returns the active RX_START event handler
  *
@@ -309,9 +331,11 @@ hal_clear_rx_start_event_handler(void)
     rx_start_callback = NULL;
     AVR_LEAVE_CRITICAL_REGION();
 }
+#endif /* HAL_HANDLERS */
 
 /*============================================================================*/
 /*= Section: Register and Memory Access ======================================*/
+/*========================================[GENERAL]===========================*/
 /*----------------------------------------------------------------------------*/
 /** \brief  This function reads data from one of the radio transceiver's registers.
  *
@@ -326,25 +350,30 @@ uint8_t
 hal_register_read(uint8_t address) /* PORTREF: line 115 */
 {
     /* Add the register read command to the register address. */
-    /* address &= HAL_TRX_CMD_RADDRM; */
+    #ifndef ATMEL_HAL_MISC /** PORTNOTE: this will probably be deleted. */
+    address &= HAL_TRX_CMD_RADDRM; /* TODO: check what's HAL_TRX_CMD_RADDRM. */
+    #endif
     address |= HAL_TRX_CMD_RR;
 
     uint8_t register_value = 0;
 
     AVR_ENTER_CRITICAL_REGION();
 
-    HAL_SS_LOW(); /* Start the SPI transaction by pulling the Slave Select low. */
+    /* Start the SPI transaction by pulling the Slave Select low. */
+    HAL_SS_LOW(); 
 
-    /* Send Register address and read register content. */
+    /* Send Register address. */
     SPDR = address;
-    while ((SPSR & (1 << SPIF)) == 0) {;}
+    while ((SPSR & (1 << SPIF)) == 0) { ; }
     register_value = SPDR;
 
+    /* Read register content. */
     SPDR = register_value;
-    while ((SPSR & (1 << SPIF)) == 0) {;}
+    while ((SPSR & (1 << SPIF)) == 0) { ; }
     register_value = SPDR;
 
-    HAL_SS_HIGH(); /* End the transaction by pulling the Slave Select High. */
+    /* End the SPI transaction by pulling the Slave Select High. */
+    HAL_SS_HIGH();
 
     AVR_LEAVE_CRITICAL_REGION();
 
@@ -368,26 +397,36 @@ hal_register_write(uint8_t address, uint8_t value) /* PORTREF: line 152 */
 
     AVR_ENTER_CRITICAL_REGION();
 
-    HAL_SS_LOW(); /* Start the SPI transaction by pulling the Slave Select low. */
+    /* Start the SPI transaction by pulling the Slave Select low. */
+    HAL_SS_LOW();
 
-
-    /*Send Register address and write register content.*/
+    /*Send Register address. */
     SPDR = address;
-    while ((SPSR & (1 << SPIF)) == 0) {;}
-    uint8_t dummy_read = SPDR;  /* Dummy read of SPDR */
+    while ((SPSR & (1 << SPIF)) == 0) { ; }
+    #ifndef DUMMY_READ_VOID
+    uint8_t dummy_read = SPDR;
+    #else
+    SPDR;
+    #endif
 
+    /* Write register content.*/
     SPDR = value;
-    while ((SPSR & (1 << SPIF)) == 0) {;}
-    dummy_read = SPDR;  /* Dummy read of SPDR */
+    while ((SPSR & (1 << SPIF)) == 0) { ; }
+    #ifndef DUMMY_READ_VOID
+    dummy_read = SPDR;
+    #else
+    SPDR;
+    #endif
 
     HAL_SS_HIGH(); /* End the transaction by pulling the Slave Slect High. */
 
     AVR_LEAVE_CRITICAL_REGION();
 
+    #ifdef ATMEL_REGISTER_WRITE	/* TODO: check is the code below is elsewhere. */
     /* Set the rx_mode variable based on how we set the radio. */
     if ((address & ~HAL_TRX_CMD_RW) == RG_TRX_STATE)
     {
-        /* set rx_mode flag based on mode we're changing to. */
+        /* Set rx_mode flag based on mode we're changing to. */
         value &= 0x1f;   /* Mask for TRX_STATE register. */
         if (value == RX_ON ||
             value == RX_AACK_ON)
@@ -395,6 +434,7 @@ hal_register_write(uint8_t address, uint8_t value) /* PORTREF: line 152 */
         else
             rx_mode = false;
     }
+    #endif
 }
 
 /*----------------------------------------------------------------------------*/
@@ -449,6 +489,7 @@ hal_subregister_write(uint8_t address, uint8_t mask, uint8_t position,
     hal_register_write(address, value);
 }
 
+#ifdef HAL_SRAM
 /*----------------------------------------------------------------------------*/
 /** \brief Read SRAM
  *
@@ -467,19 +508,26 @@ hal_sram_read(uint8_t address, uint8_t length, uint8_t *data) /* PORTREF: line 3
 
     /* Send SRAM read command. */
     SPDR = HAL_TRX_CMD_SR;
-    while ((SPSR & (1 << SPIF)) == 0) {;}
-    uint8_t dummy_read = SPDR; /* again .. */
+    while ((SPSR & (1 << SPIF)) == 0) { ; }
+    #ifndef DUMMY_READ_VOID
+    uint8_t dummy_read = SPDR;
+    #else
+    SPDR;
+    #endif
 
     /* Send address where to start reading. */
     SPDR = address;
-    while ((SPSR & (1 << SPIF)) == 0) {;}
-
-    dummy_read = SPDR; /* .. and gain */
+    while ((SPSR & (1 << SPIF)) == 0) { ; }
+    #ifndef DUMMY_READ_VOID
+    dummy_read = SPDR;
+    #else
+    SPDR;
+    #endif
 
     /* Upload the chosen memory area. */
     do{
-        SPDR = HAL_DUMMY_READ;
-        while ((SPSR & (1 << SPIF)) == 0) {;}
+        SPDR = HAL_DUMMY_VALUE;
+        while ((SPSR & (1 << SPIF)) == 0) { ; }
         *data++ = SPDR;
     } while (--length > 0);
 
@@ -505,26 +553,40 @@ hal_sram_write(uint8_t address, uint8_t length, uint8_t *data) /* PORTREF: line 
 
     /* Send SRAM write command. */
     SPDR = HAL_TRX_CMD_SW;
-    while ((SPSR & (1 << SPIF)) == 0) {;}
+    while ((SPSR & (1 << SPIF)) == 0) { ; }
+    #ifndef DUMMY_READ_VOID
     uint8_t dummy_read = SPDR;
+    #else
+    SPDR;
+    #endif
 
     /* Send address where to start writing to. */
     SPDR = address;
-    while ((SPSR & (1 << SPIF)) == 0) {;}
+    while ((SPSR & (1 << SPIF)) == 0) { ; }
+    #ifndef DUMMY_READ_VOID
     dummy_read = SPDR;
+    #else
+    SPDR;
+    #endif
 
     /* Upload the chosen memory area. */
     do{
         SPDR = *data++;
-        while ((SPSR & (1 << SPIF)) == 0) {;}
+        while ((SPSR & (1 << SPIF)) == 0) { ; }
+	#ifndef DUMMY_READ_VOID
         dummy_read = SPDR;
+	#else
+	SPDR;
+	#endif
     } while (--length > 0);
 
     HAL_SS_HIGH();
 
     AVR_LEAVE_CRITICAL_REGION();
 }
+#endif /* HAL_SRAM */
 
+#ifdef HAL_EEPROM
 /*----------------------------------------------------------------------------*/
 /**\brief General-purpose function to read data out of EEPROM
  *
@@ -532,7 +594,7 @@ hal_sram_write(uint8_t address, uint8_t length, uint8_t *data) /* PORTREF: line 
  * \param length The length in bytes of the data block
  * \param dest  Pointer to the area in memory to place the data block
  */
-void hal_eeprom_read_block(u8 *addr, u8 length, u8 *dest) /* PORTREF: line 614 */
+void hal_eeprom_read_block(uint8_t *addr, uint8_t length, uint8_t *dest) /* PORTREF: line 614 */
 {
     AVR_ENTER_CRITICAL_REGION();
     eeprom_read_block (dest, addr, length);
@@ -545,19 +607,20 @@ void hal_eeprom_read_block(u8 *addr, u8 length, u8 *dest) /* PORTREF: line 614 *
  * \param length The length in bytes of the data block
  * \param src  Pointer to the area in memory which contains the data block
  */
-void hal_eeprom_write_block(u8 *addr, u8 length, u8 *src) /* PORTREF: line 628 */
+void hal_eeprom_write_block(uint8_t *addr, uint8_t length, uint8_t *src) /* PORTREF: line 628 */
 {
     AVR_ENTER_CRITICAL_REGION();
     eeprom_write_block (src, addr, length);
     AVR_LEAVE_CRITICAL_REGION();
 }
+#endif /* HAL_EEPROM */
 
+/*========================================[DATAFRAMES]========================*/
 /*----------------------------------------------------------------------------*/
-/** \brief  This function will upload a frame from the radio transceiver's frame
- *          buffer.
+/** \brief  This function will upload a frame from the radio transceiver's frame buffer.
  *
  *          If the frame currently available in the radio transceiver's frame buffer
- *          is out of the defined bounds. Then the frame length, lqi value and crc
+ *          is out of the defined bounds. Then the frame length, LQI value and CRC
  *          be set to zero. This is done to indicate an error.
  *
  *  \param  rx_frame    Pointer to the data structure where the frame is stored.
@@ -566,11 +629,21 @@ void hal_eeprom_write_block(u8 *addr, u8 length, u8 *src) /* PORTREF: line 628 *
 void
 hal_frame_read(hal_rx_frame_t *rx_frame, rx_callback_t rx_callback) /* PORTREF: line 245 */
 {
+
+/* TODO: for optimisation this should be defined in two version,
+ *		one with signle argument and one with two.
+ ****************************************************************/
+			/* PORTNOTE: Atmel code reads is from mac_buffer_rx,
+			 * 		which is a global variable
+			 * 		defined on line 66 in mac.c
+			 ***************************************************/
     uint8_t *rx_data=0;
 
-    /*  check that we have either valid frame pointer or callback pointer */
+#ifdef HAL_HANDLERS
+    /*  Check that we have either valid frame pointer or callback pointer. */
     if (!rx_frame && !rx_callback)
 	return;
+#endif /* HAL_HANDLERS */
 
     AVR_ENTER_CRITICAL_REGION();
 
@@ -578,73 +651,94 @@ hal_frame_read(hal_rx_frame_t *rx_frame, rx_callback_t rx_callback) /* PORTREF: 
 
     /* Send frame read command. */
     SPDR = HAL_TRX_CMD_FR;
-    while ((SPSR & (1 << SPIF)) == 0) {;}
+    while ((SPSR & (1 << SPIF)) == 0) { ; }
     uint8_t frame_length = SPDR;
 
     /* Read frame length. */
     SPDR = frame_length;
-    while ((SPSR & (1 << SPIF)) == 0) {;}
+    while ((SPSR & (1 << SPIF)) == 0) { ; }
     frame_length = SPDR;
 
     /* Check for correct frame length. */
     if ((frame_length >= HAL_MIN_FRAME_LENGTH) && (frame_length <= HAL_MAX_FRAME_LENGTH)){
+	#ifdef HAL_CRC_CALC
 	uint16_t crc = 0;
+	#endif
+	#ifdef HAL_HANDLERS
 	if (rx_frame){
+	#endif
 	    rx_data = (rx_frame->data);
 	    rx_frame->length = frame_length; /* Store frame length. */
+	#ifdef HAL_HANDLERS
 	} else {
 	    rx_callback(frame_length);
 	}
-	/* Upload frame buffer to data pointer. Calculate CRC. */
+	#endif
+
+	/* Upload frame buffer to data pointer. */ 
 	SPDR = frame_length;
-	while ((SPSR & (1 << SPIF)) == 0) {;}
+	while ((SPSR & (1 << SPIF)) == 0) { ; }
 
 	do{
 	    uint8_t tempData = SPDR;
-	    SPDR = 0;       /*  dummy write */
+	    SPDR = HAL_DUMMY_VALUE;
 
+	    #ifdef HAL_HANDLERS
 	    if (rx_frame){
+	    #endif
 		*rx_data++ = tempData;
+	    #ifdef HAL_HANDLERS
 	    } else {
 		rx_callback(tempData);
 	    }
-
+	    #endif
+	    #if HAL_CRC_CALC
+	    /* Calculate CRC. */
 	    crc = _crc_ccitt_update(crc, tempData); /* PORTNOTE: Atmel doesn't do that at all ... */
+	    #endif
 
-	    while ((SPSR & (1 << SPIF)) == 0) {;}
+	    while ((SPSR & (1 << SPIF)) == 0) { ; }
 
 	} while (--frame_length > 0);
 
-	/* Read LQI value for this frame. */
+	/* Read LQI value for this frame
+	 * and store it in lqi . */
+	#ifdef HAL_HANDLERS
 	if (rx_frame){
+	#endif
 	    rx_frame->lqi = SPDR;
-	} else {
+	#ifdef HAL_HANDLERS
+	} else {				/* PORTNOTE: Atmel code doesn't do callbacks. */
 	    rx_callback(SPDR);
 	}
+	#endif
 	
 	HAL_SS_HIGH();
 
-	/* Check calculated crc, and set crc field in hal_rx_frame_t accordingly. */
+	#ifdef HAL_CRC_CALC
+	/* Check calculated CRC, and set crc field in hal_rx_frame_t accordingly. */
 	if (rx_frame){	/* PORTNOTE: Neither it does this! */
 	    rx_frame->crc = (crc == HAL_CALCULATED_CRC_OK);
 	} else {
 	    rx_callback(crc != HAL_CALCULATED_CRC_OK);
 	}
-    } else {
+	#endif
+    } else { /* ((frame_length >= HAL_MIN_FRAME_LENGTH) && (frame_length <= HAL_MAX_FRAME_LENGTH)) */
+
 	HAL_SS_HIGH();
 
-	if (rx_frame){
+	/* If frame_length is either too large or too small, set it to zero. */
+	/* if (rx_frame){ */ /* PORTNOTE: this is redundant anyway. */
 	    rx_frame->length = 0;
 	    rx_frame->lqi    = 0;
 	    rx_frame->crc    = false;
-	}
+	/* } */
     }
 
     AVR_LEAVE_CRITICAL_REGION();
 }
 /*----------------------------------------------------------------------------*/
-/** \brief  This function will download a frame to the radio transceiver's frame
- *          buffer.
+/** \brief  This function will download a frame to the radio transceiver's frame buffer.
  *
  *  \param  write_buffer    Pointer to data that is to be written to frame buffer.
  *  \param  length          Length of data. The maximum length is 127 bytes.
@@ -656,33 +750,47 @@ hal_frame_write(uint8_t *write_buffer, uint8_t length) /* PORTREF: line 311 */
 
     AVR_ENTER_CRITICAL_REGION();
 
+#ifdef ATMEL_HAL_MISC /* PORTNOTE: This should be uncoditional (probably). */
+
     /* Toggle the SLP_TR pin to initiate the frame transmission. */
     hal_set_slptr_high();
     hal_set_slptr_low();
 
+#endif
+
     HAL_SS_LOW(); /* Initiate the SPI transaction. */
 
-    /* SEND FRAME WRITE COMMAND AND FRAME LENGTH.*/
+    /* Send frame write command. */
     SPDR = HAL_TRX_CMD_FW;
-    while ((SPSR & (1 << SPIF)) == 0) {;}
+    while ((SPSR & (1 << SPIF)) == 0) { ; }
+    #ifndef DUMMY_READ_VOID
     uint8_t dummy_read = SPDR;
-    /* Could just do this:
-     * SPDR; */
+    #else
+    SPDR;
+    #endif
 
+    /* Send frame length. */
     SPDR = length;
-    while ((SPSR & (1 << SPIF)) == 0) {;}
+    while ((SPSR & (1 << SPIF)) == 0) { ; }
+    #ifndef DUMMY_READ_VOID
     dummy_read = SPDR;
-    /* Here could be the same:
-     * SPDR; */
+    #else
+    SPDR;
+    #endif
 
     /* Download to the Frame Buffer. */
     do{
 	SPDR = *write_buffer++;
 	--length;
 
-	while ((SPSR & (1 << SPIF)) == 0) {;}
+	while ((SPSR & (1 << SPIF)) == 0) { ; }
 
-	dummy_read = SPDR; /* Here as well, this would save one variable ..! */
+	#ifndef DUMMY_READ_VOID
+	dummy_read = SPDR;
+	#else
+	SPDR;
+	#endif
+
     } while (length > 0);
 
     HAL_SS_HIGH(); /* Terminate SPI transaction. */
@@ -707,7 +815,7 @@ ISR(RADIO_VECT) /* PORTREF: line 438 */
 
     #ifdef ATMEL_RADIO_ISR
     /* Read Interrupt source. */
-    u8 interrupt_source = hal_register_read(RG_IRQ_STATUS);
+    uint8_t interrupt_source = hal_register_read(RG_IRQ_STATUS);
 
     if (interrupt_source & HAL_TRX_END_MASK)
 	radioTrxEndEvent();
@@ -728,12 +836,13 @@ ISR(RADIO_VECT) /* PORTREF: line 438 */
 	HAL_SS_LOW();
 
 	SPDR = HAL_TRX_CMD_FR;
-	while ((SPSR & (1 << SPIF)) == 0) {;}
+	while ((SPSR & (1 << SPIF)) == 0) { ; }
 	SPDR;
 
-	SPDR = 0; /* Send dummy byte so we can read one byte back. */
-	while ((SPSR & (1 << SPIF)) == 0) {;}
-	u8 frame_length = SPDR;
+ 	/* Send dummy byte so we can read one byte back. */
+	SPDR = HAL_DUMMY_VALUE;
+	while ((SPSR & (1 << SPIF)) == 0) { ; }
+	uint8_t frame_length = SPDR;
 
 	HAL_SS_HIGH();
 
@@ -747,7 +856,7 @@ ISR(RADIO_VECT) /* PORTREF: line 438 */
 	 * the supply voltage is less than the user defined
 	 * voltage threshold.
 	 *******************************************************/
-	u8 trx_isr_mask = hal_register_read(RG_IRQ_MASK);
+	uint8_t trx_isr_mask = hal_register_read(RG_IRQ_MASK);
 	trx_isr_mask &= ~HAL_BAT_LOW_MASK;
 	hal_register_write(RG_IRQ_MASK, trx_isr_mask);
     }
@@ -763,6 +872,9 @@ ISR(RADIO_VECT) /* PORTREF: line 438 */
     uint32_t isr_timestamp = hal_system_time;
     isr_timestamp <<= 16;
     isr_timestamp |= TCNT1;
+    volatile uint8_t state;
+
+    INTERRUPTDEBUG(1);
 
     /* Read Interrupt source. */
     HAL_SS_LOW();
@@ -777,47 +889,79 @@ ISR(RADIO_VECT) /* PORTREF: line 438 */
     isr_timestamp /= HAL_US_PER_SYMBOL; /* Divide so that we get time in 16us resolution. */
     isr_timestamp &= HAL_SYMBOL_MASK;
 
-    while ((SPSR & (1 << SPIF)) == 0) {;}
+    while ((SPSR & (1 << SPIF)) == 0) { ; }
     uint8_t interrupt_source = SPDR; /* The interrupt variable is used as a dummy read. */
 
     SPDR = interrupt_source;
-    while ((SPSR & (1 << SPIF)) == 0) {;}
+    while ((SPSR & (1 << SPIF)) == 0) { ; }
     interrupt_source = SPDR; /* The interrupt source is read. */
 
     HAL_SS_HIGH();
 
     /* Handle the incomming interrupt. Prioritized. */
     if ((interrupt_source & HAL_RX_START_MASK)){	/* PORTREF: line 456 */
+	INTERRUPTDEBUG(10);
+	#ifdef HAL_HANDLERS
         if(rx_start_callback != NULL){
             /* Read Frame length and call rx_start callback. */
             HAL_SS_LOW();
 
             SPDR = HAL_TRX_CMD_FR;
-            while ((SPSR & (1 << SPIF)) == 0) {;}
+            while ((SPSR & (1 << SPIF)) == 0) { ; }
             uint8_t frame_length = SPDR;
 
             SPDR = frame_length; /* frame_length used for dummy data */
-            while ((SPSR & (1 << SPIF)) == 0) {;}
+            while ((SPSR & (1 << SPIF)) == 0) { ; }
             frame_length = SPDR;
 
             HAL_SS_HIGH();
 
             rx_start_callback(isr_timestamp, frame_length);
         }
+	#endif /* HAL_HANDLERS */
+
     } else if (interrupt_source & HAL_TRX_END_MASK){	/* PORTREF: line 443 */
+	INTERRUPTDEBUG(11);
+	#ifdef HAL_HANDLERS
         if(trx_end_callback != NULL){
             trx_end_callback(isr_timestamp);
         }
+	#endif /* HAL_HANDLERS */
+
+	#ifndef HAL_HANDLERS /* Enabling handlers together with this can break it. */
+	state = hal_subregister_read(SR_TRX_STATUS);
+	if((state == BUSY_RX_AACK)
+	|| (state == RX_ON)
+	|| (state == BUSY_RX)
+	|| (state == RX_AACK_ON)){
+	/* Receive packet interrupt. */
+	/* Buffer the frame and call rf2xx_interrupt to schedule poll for the receive process. */
+
+	if(rxframe.length){ INTERRUPTDEBUG(42); } else { INTERRUPTDEBUG(12); }
+
+	hal_frame_read(&rxframe, NULL);
+	rf2xx_interrupt();
+
+	}
+	#endif /* !HAL_HANDLERS */
+
+
     /* Energy detect event. */
     } else if (interrupt_source & HAL_ED_READY_MASK){	/* PORTREF: line 447 */
+	INTERRUPTDEBUG(17);
 	/* TODO: macEdCallback(); */
 	;
     } else if (interrupt_source & HAL_TRX_UR_MASK){
+	INTERRUPTDEBUG(13);
         ; /* TODO: look if anything useful could be done here */
     } else if (interrupt_source & HAL_PLL_UNLOCK_MASK){
+    	INTERRUPTDEBUG(14);
         ; /* TODO: look if anything useful could be done here */
     } else if (interrupt_source & HAL_PLL_LOCK_MASK){
+    	INTERRUPTDEBUG(15);
+	#ifdef HAL_FLAGS
         hal_pll_lock_flag++;
+	#endif
         ;
     } else if (interrupt_source & HAL_BAT_LOW_MASK){	/* PORTREF: line 473 */
         /*  Disable BAT_LOW interrupt to prevent endless interrupts. The interrupt */
@@ -826,9 +970,15 @@ ISR(RADIO_VECT) /* PORTREF: line 438 */
         uint8_t trx_isr_mask = hal_register_read(RG_IRQ_MASK);
         trx_isr_mask &= ~HAL_BAT_LOW_MASK;
         hal_register_write(RG_IRQ_MASK, trx_isr_mask);
+	#ifdef HAL_FLAGS
         hal_bat_low_flag++; /* Increment BAT_LOW flag. */
-
-    } else { ; } /* unknown interrupt_source */
+	#endif
+	INTERRUPTDEBUG(16);
+	;
+    } else {
+ 		INTERRUPTDEBUG(99);
+ 		;
+    } /* unknown interrupt_source */
     
     #endif /* ATMEL_RADIO_ISR || CONTIKI_RADIO_ISR */
 }
