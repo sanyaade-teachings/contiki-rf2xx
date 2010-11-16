@@ -325,46 +325,49 @@ setlocal wrapmargin=0
 silent! normal! zE
 1,43fold
 49,55fold
-123,132fold
-136,142fold
-143,159fold
-161,166fold
-167,171fold
-174,178fold
-179,186fold
-188,193fold
-194,208fold
-265,268fold
+133,142fold
+146,152fold
+153,169fold
+171,176fold
+177,181fold
+184,188fold
+189,196fold
+198,203fold
+204,218fold
+227,238fold
+300,303fold
 1
 normal zc
 49
 normal zc
-123
+133
 normal zc
-136
+146
 normal zc
-143
+153
 normal zc
-161
+171
 normal zc
-167
+177
 normal zo
-174
+184
 normal zc
-179
+189
 normal zc
-188
+198
 normal zc
-194
+204
 normal zc
-265
+227
 normal zc
-let s:l = 227 - ((59 * winheight(0) + 17) / 34)
+300
+normal zc
+let s:l = 280 - ((19 * winheight(0) + 17) / 34)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-227
-normal! 025l
+280
+normal! 0
 wincmd w
 argglobal
 edit ../rf230bb/rf230bb.h
@@ -465,6 +468,7 @@ silent! normal! zE
 1,39fold
 46,52fold
 53,57fold
+53,58fold
 59,78fold
 59,95fold
 98,107fold
@@ -475,9 +479,16 @@ silent! normal! zE
 148,158fold
 161,165fold
 166,173fold
+96,176fold
+178,190fold
+198,202fold
 1
 normal zc
 46
+normal zc
+53
+normal zo
+53
 normal zc
 53
 normal zc
@@ -487,6 +498,8 @@ normal zo
 normal zc
 59
 normal zc
+96
+normal zo
 98
 normal zc
 109
@@ -505,12 +518,18 @@ normal zc
 normal zc
 166
 normal zc
-let s:l = 214 - ((32 * winheight(0) + 16) / 33)
+96
+normal zc
+178
+normal zc
+198
+normal zc
+let s:l = 211 - ((168 * winheight(0) + 16) / 33)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-214
-normal! 015l
+211
+normal! 0
 wincmd w
 exe '1resize ' . ((&lines * 34 + 35) / 71)
 exe '2resize ' . ((&lines * 33 + 35) / 71)
@@ -615,12 +634,12 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 418 - ((0 * winheight(0) + 34) / 69)
+let s:l = 108 - ((40 * winheight(0) + 34) / 69)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-418
-normal! 03l
+108
+normal! 0
 tabnext 1
 if exists('s:wipebuf')
   silent exe 'bwipe ' . s:wipebuf

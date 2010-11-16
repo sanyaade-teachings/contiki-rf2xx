@@ -54,25 +54,115 @@
 #ifndef RADIO_H
 #define RADIO_H
 /*============================ INCLUDE =======================================*/
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
-/* #include "at86rf230_registermap.h" */
+#include <avr/io.h>
+#include <util/delay.h>
+/* #include <avr/pgmspace.h> */
+
 #include "hal.h"
+#include "contiki.h"
+#include "process.h"
+#include "contiki-conf.h"
+
+/*----------------------------------------------------------------------------*/
+/* #include "sicslowmac.h" */
+
+/* #include "dev/leds.h" */
+/* #include "dev/spi.h" */
+
+/*----------------------------------------------------------------------------*/
+#include "net/packetbuf.h"
+#include "net/rime/rimestats.h"
+#include "net/netstack.h"
+#if RF2XX_TIMETABLE_PROFILING
+	#include "sys/timetable.h"
+	#define rf2xx_timetable_size 16
+#endif
+
+#if RF2XX_CONF_TIMESTAMPS
+	#include "net/rime/timesynch.h"
+	#define TIMESTAMP_LEN 3
+#else
+	#define TIMESTAMP_LEN 0
+#endif
 
 /*============================ MACROS ========================================*/
+
+#ifndef RF2XX_CONF_AUTORETRIES
+	#define RF2XX_CONF_AUTORETRIES 2
+#endif
+
+#ifndef RF2XX_CONF_AACK
+	#define RF2XX_CONF_AACK 1
+#endif
+
+#ifndef RF2XX_CONF_AUTO_CRC
+	#ifdef HAL_CALC_CRC
+	#undef HAL_CALC_CRC
+	#endif
+	#define RF2XX_CONF_AUTO_CRC 1
+#endif
+
+#if WEBSERVER /* See clock.c and httpd-cgi.c */
+	#define RADIOSTATS 1
+#else
+	#define RADIOSTATS 0
+#endif 
+
+/*----------------------------------------------------------------------------*/
+#ifndef DEBUG
+	#define DEBUG 0
+#endif
+
+#if DEBUG
+	#define PRINTF(...) printf(__VA_ARGS__)
+	#define PRINTSHORT(...) printf(__VA_ARGS__)
+#else
+	#define PRINTF(...)
+	#define PRINTSHORT(...) //printf(__VA_ARGS__)
+#endif
+
+/* Track flow through driver,
+ * see contiki-raven-main.c for example of use.
+ */
+#ifndef DEBUGFLOWSIZE
+	#define DEBUGFLOWSIZE 64
+#endif
+
+#if DEBUGFLOWSIZE
+	#define DEBUGFLOW(c) if (debugflowsize<(DEBUGFLOWSIZE-1)) debugflow[debugflowsize++]=c
+#else
+	#define DEBUGFLOW(c)
+#endif
+
+#define FOOTER_LEN	0 /* or '2' ? */
+#define CHECKSUM_LEN	2 /* 16-bit CRC checksum */
+#define AUX_LEN (CHECKSUM_LEN + TIMESTAMP_LEN + FOOTER_LEN)
+
+#define FOOTER1_CRC_OK      0x80
+#define FOOTER1_CORRELATION 0x7f
+
+/*----------------------------------------------------------------------------*/
 /* TODO: this has to be adjusted in accordance to hal.c */
 #define SUPPORTED_PART_NUMBER                   ( 2 )
 #define SUPPORTED_MANUFACTURER_ID               ( 31 )
 #define RF230_SUPPORTED_INTERRUPT_MASK          ( 0x0C )
 
+/* TODO: this will be romoved (most probably). */
 #define RF230_REVA                              ( 1 )
 #define RF230_REVB                              ( 2 )
 
-#define RF2xx_MIN_CHANNEL                       ( 11 )
-#define RF2xx_MAX_CHANNEL                       ( 26 )
-#define RF2xx_MIN_ED_THRESHOLD                  ( 0 )
-#define RF2xx_MAX_ED_THRESHOLD                  ( 15 )
-#define RF2xx_MAX_TX_FRAME_LENGTH               ( 127 ) /**< 127 Byte PSDU. */
+/*----------------------------------------------------------------------------*/
+
+#define RF2XX_MIN_CHANNEL                       ( 11 )
+#define RF2XX_MAX_CHANNEL                       ( 26 )
+#define RF2XX_MIN_ED_THRESHOLD                  ( 0 )
+#define RF2XX_MAX_ED_THRESHOLD                  ( 15 )
+#define RF2XX_MAX_TX_FRAME_LENGTH               ( 127 ) /**< 127 Byte PSDU. */
 /* #define RF230_MAX_PACKET_LEN			( 127 ) */
 
 #define TX_PWR_3DBM                             ( 0 )
@@ -94,17 +184,20 @@
 #define RADIO_BUSY_CHANNEL          (3)
 #define RADIO_MIN_IEEE_FRAME_LENGTH (5)
 
+#ifdef RF2XX_CONF_BATTERY_MONITOR
 #define BATTERY_MONITOR_HIGHEST_VOLTAGE         ( 15 )
 #define BATTERY_MONITOR_VOLTAGE_UNDER_THRESHOLD ( 0 )
 #define BATTERY_MONITOR_HIGH_VOLTAGE            ( 1 )
 #define BATTERY_MONITOR_LOW_VOLTAGE             ( 0 )
+#endif
 
+#ifdef RF2XX_CONF_CALIBRATION
 #define FTN_CALIBRATION_DONE                    ( 0 )
 #define PLL_DCU_CALIBRATION_DONE                ( 0 )
 #define PLL_CF_CALIBRATION_DONE                 ( 0 )
-
 #define RC_OSC_REFERENCE_COUNT_MAX  (1.005*F_CPU*31250UL/8000000UL)
 #define RC_OSC_REFERENCE_COUNT_MIN  (0.995*F_CPU*31250UL/8000000UL)
+#endif
 
 /* #define delay_us( us )   ( _delay_loop_2( ( F_CPU / 4000000UL ) * ( us ) ) ) */
 
@@ -185,8 +278,9 @@ typedef enum{
     CLKM_16MHZ         = 5
 }radio_clkm_speed_t;
 
-/** \brief  This enumeration defines the necessary timing information for the
- *          AT86RF230 radio transceiver. All times are in microseconds.
+/** \brief  This enumeration defines the necessary hardware delay timing
+ *          information for the AT86RF230 radio transceiver.
+ *          All times are in microseconds.
  *
  *          These constants are extracted from the datasheet.
  *
@@ -211,55 +305,123 @@ typedef enum{
 typedef void (*radio_rx_callback) (uint16_t data);
 #endif
 
-/* TODO: this needs to be checked if it's needed */
-/* extern uint8_t rxMode; */
+/*============================ STRUCTS ========================================*/
+const struct radio_driver rf2xx_driver =
+  {
+    rf2xx_init,
+    rf2xx_prepare,
+    rf2xx_transmit,
+    rf2xx_send,
+    rf2xx_read,
+    rf2xx_cca,
+    rf2xx_receiving_packet,
+    rf2xx_pending_packet,
+    rf2xx_on,
+    rf2xx_off
+  };
 
+#if RF2XX_CONF_TIMESTAMPS
+struct timestamp {
+  uint16_t time;
+  uint8_t authority_level;
+};
+#endif
+/*============================ HOOKS =========================================*/
+/*	Hook Documentation 
+**	
+**	Sniffing Hooks:
+**		RF2XX_HOOK_TX_PACKET(buffer,total_len)
+**		RF2XX_HOOK_RX_PACKET(buf,len)
+**
+**	RF2XX_HOOK_IS_SEND_ENABLED()
+**	RF2XX_HOOK_RADIO_ON()
+**	RF2XX_HOOK_RADIO_OFF()
+**	
+*/
 /*============================ PROTOTYPES ====================================*/
 
 /* == Initialization == */
+#ifdef HAL_HANDLERS
 radio_status_t rf2xx_init(bool cal_rc_osc,
                           hal_rx_start_isr_event_handler_t rx_event,
                           hal_trx_end_isr_event_handler_t trx_end_event,
                           radio_rx_callback rx_callback);
+#else
+
+radio_status_t rf2xx_init( void );
+
+#endif /* HAL_HANDLERS */
 
 radio_status_t rf2xx_cca( void );
 
-/* == Store and Read == */
-uint8_t		radio_get_part_number( void );
-uint8_t		radio_get_operating_channel( void );
-radio_status_t	radio_set_operating_channel( uint8_t channel );
-uint8_t		radio_get_device_role( void );
-void		radio_set_device_role( bool i_am_coordinator );
-uint16_t	radio_get_pan_id( void );
-void		radio_set_pan_id( uint16_t new_pan_id );
-uint16_t	radio_get_short_address( void );
-void		radio_set_short_address( uint16_t new_short_address );
-void		radio_get_extended_address( uint8_t *extended_address );
-void		radio_set_extended_address( uint8_t *extended_address );
-uint8_t		radio_get_tx_power_level( void );
-radio_status_t	radio_set_tx_power_level( uint8_t power_level );
-uint8_t		radio_get_cca_mode( void );
-radio_status_t	radio_set_cca_mode( uint8_t mode, uint8_t ed_threshold );
-radio_status_t	radio_get_rssi_value( uint8_t *rssi );
-uint8_t		radio_get_saved_rssi_value( void );
-uint8_t		radio_get_saved_lqi_value ( void );
-uint8_t		radio_get_ed_threshold( void );
+#ifndef CODE_OPT_TEST
+void           rf2xx_use_auto_tx_crc( bool auto_crc_on );
+#endif
 
+#ifdef RF2XX_CONF_ENABLE_CSMA
+radio_status_t rf2xx_configure_csma( uint8_t seed0, uint8_t be_csma_seed1 );
+#endif
+
+/* == Store and Read == */
+#ifdef CODE_OPT_MACROS
+/* extern uint8_t hal_subregister_read(uint8_t address, uint8_t mask, uint8_t position); */
+#else
+uint8_t		rf2xx_get_operating_channel( void );
+uint8_t		rf2xx_get_device_role( void );
+uint8_t		rf2xx_get_cca_mode( void );
+uint8_t		rf2xx_get_ed_threshold( void );
+#endif /* CODE_OPT_MACROS */
+
+uint8_t		radio_get_part_number( void );
+radio_status_t	rf2xx_set_operating_channel( uint8_t channel );
+void		rf2xx_set_device_role( bool i_am_coordinator );
+
+void		rf2xx_set_pan_addr( unsigned pan,
+				    unsigned addr,
+				    const uint8_t ieee_addr[8] )
+
+uint16_t	radio_get_pan_id( void );
+#ifndef CODE_OPT_TEST
+void		radio_set_pan_id( uint16_t new_pan_id );
+#endif
+uint16_t	radio_get_short_address( void );
+#ifndef CODE_OPT_TEST
+void		radio_set_short_address( uint16_t new_short_address );
+#endif
+void		radio_get_extended_address( uint8_t *extended_address );
+#ifndef CODE_OPT_TEST
+void		radio_set_extended_address( uint8_t *extended_address );
+#endif
+uint8_t		rf2xx_get_tx_power_level( void );
+radio_status_t	rf2xx_set_tx_power_level( uint8_t power_level );
+radio_status_t	rf2xx_set_cca_mode( uint8_t mode, uint8_t ed_threshold );
+uint8_t		rf2xx_get_raw_rssi( void );
+#define rf230_rssi	rf2xx_get_raw_rssi
+radio_status_t	rf2xx_get_rssi_value( uint8_t *rssi );
+uint8_t		rf2xx_get_saved_rssi_value( void );
+uint8_t		radio_get_saved_lqi_value ( void );
+
+#ifdef RF2XX_CONF_BATTERY_MONITOR
 /* == Battery Monitor ==*/
 radio_status_t	rf2xx_batmon_configure( bool range, uint8_t voltage_threshold );
 radio_status_t	rf2xx_batmon_get_status( void );
+#ifndef CODE_OPT_MACROS
 uint8_t		rf2xx_batmon_get_voltage_threshold( void );
 uint8_t		rf2xx_batmon_get_voltage_range( void );
+#endif /* CODE_OPT_MACROS */
+#endif /* RF2XX_CONF_BATTERY_MONITOR */
 
 /* == Clock Settings == */
 uint8_t		rf2xx_get_clock_speed( void );
 radio_status_t	rf2xx_set_clock_speed( bool direct, uint8_t clock_speed );
 
+#ifdef RF2XX_CONF_CALIBRATION
 /* == Radio Callibration ==*/
 radio_status_t	rf2xx_calibrate_filter( void );
 radio_status_t	rf2xx_calibrate_pll( void );
 bool		calibrate_rc_osc_clkm( void );
 void		calibrate_rc_osc_32k( void );
+#endif /* RF2XX_CONF_CALIBRATION */
 
 /* == States and Transitions ==*/
 #ifdef HAL_HANDLERS
@@ -267,7 +429,16 @@ static void radio_rx_start_event(uint32_t const isr_timestamp, uint8_t const fra
 static void radio_trx_end_event(uint32_t const isr_timestamp);
 #endif
 
+void	on( void );
+int	rf2xx_on( void );
+void	off( void );
+int	rf2xx_off( void );
+
+void		rf2xx_set_promiscuous_mode(bool m);
+
+#ifndef CODE_OPT_MACROS
 uint8_t		rf2xx_get_trx_state( void );
+#endif
 radio_status_t	rf2xx_set_trx_state( uint8_t new_state );
 bool		radio_is_sleeping( void );
 radio_status_t	rf2xx_enter_sleep_mode( void );
@@ -278,16 +449,22 @@ void		rf2xx_reset_trx( void );
 #endif
 
 /* == Data Transmission ==*/
+
+static int rf2xx_prepare( const void *data, unsigned short len );
+static int rf2xx_transmit( unsigned short len );
+static int rf2xx_send( const void *data, unsigned short len );
+static int rf2xx_read( void *buf, unsigned short bufsize );
+
+static int rf2xx_receiving_packet( void );
+static int rf2xx_pending_packet( void );
+
+
 #ifdef HAL_HANDLERS
 radio_status_t radio_send_data( uint8_t data_length, uint8_t *data );
 #endif
 #ifndef CODE_OPT_TEST
 uint8_t      * radio_frame_data( void );
 uint8_t        radio_frame_length( void );
-void           rf2xx_use_auto_tx_crc( bool auto_crc_on );
-#endif
-#ifdef RF2XX_CONF_ENABLE_CSMA
-radio_status_t rf2xx_configure_csma( uint8_t seed0, uint8_t be_csma_seed1 );
 #endif
 
 
