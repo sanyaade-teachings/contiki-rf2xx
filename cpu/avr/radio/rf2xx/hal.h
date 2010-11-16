@@ -63,7 +63,7 @@
 #include <stdlib.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
-#ifdef HAL_CRC_CALC
+#ifdef HAL_CALC_CRC
 	#include <util/crc16.h>
 #endif
 #include <util/delay.h>

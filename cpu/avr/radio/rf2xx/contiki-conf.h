@@ -1,3 +1,5 @@
+#define TODO 0
+
 #define DEFAULT_VALUE 1
 
 /** Define transceiver model (hal.h) */
@@ -26,3 +28,16 @@
  ** There is no need for DUMMY_WRITE_VOID
  ************************************************/
 #define DUMMY_READ_VOID		DEFAULT_VALUE
+
+/** If this is TRUE then we use less function definitions
+ ** and put the code in-line for rearly used functions.
+ ***********************************************/
+#define CODE_OPT_TEST
+
+#define CODE_OPT_MACROS
+
+#define RADIO_CONF_AUTO_CRC 1
+
+/* CSMA is not yet in use. */
+//#define RADIO_CONF_ENABLE_CSMA */
+

@@ -661,7 +661,7 @@ hal_frame_read(hal_rx_frame_t *rx_frame, rx_callback_t rx_callback) /* PORTREF: 
 
     /* Check for correct frame length. */
     if ((frame_length >= HAL_MIN_FRAME_LENGTH) && (frame_length <= HAL_MAX_FRAME_LENGTH)){
-	#ifdef HAL_CRC_CALC
+	#ifdef HAL_CALC_CRC
 	uint16_t crc = 0;
 	#endif
 	#ifdef HAL_HANDLERS
@@ -692,7 +692,7 @@ hal_frame_read(hal_rx_frame_t *rx_frame, rx_callback_t rx_callback) /* PORTREF: 
 		rx_callback(tempData);
 	    }
 	    #endif
-	    #if HAL_CRC_CALC
+	    #if HAL_CALC_CRC
 	    /* Calculate CRC. */
 	    crc = _crc_ccitt_update(crc, tempData); /* PORTNOTE: Atmel doesn't do that at all ... */
 	    #endif
@@ -715,7 +715,7 @@ hal_frame_read(hal_rx_frame_t *rx_frame, rx_callback_t rx_callback) /* PORTREF: 
 	
 	HAL_SS_HIGH();
 
-	#ifdef HAL_CRC_CALC
+	#ifdef HAL_CALC_CRC
 	/* Check calculated CRC, and set crc field in hal_rx_frame_t accordingly. */
 	if (rx_frame){	/* PORTNOTE: Neither it does this! */
 	    rx_frame->crc = (crc == HAL_CALCULATED_CRC_OK);
@@ -937,9 +937,9 @@ ISR(RADIO_VECT) /* PORTREF: line 438 */
 	/* Receive packet interrupt. */
 	/* Buffer the frame and call rf2xx_interrupt to schedule poll for the receive process. */
 
-	if(rxframe.length){ INTERRUPTDEBUG(42); } else { INTERRUPTDEBUG(12); }
+	if(rx_frame.length){ INTERRUPTDEBUG(42); } else { INTERRUPTDEBUG(12); }
 
-	hal_frame_read(&rxframe, NULL);
+	hal_frame_read(&rx_frame, NULL);
 	rf2xx_interrupt();
 
 	}
