@@ -81,9 +81,10 @@
 /*============================ INCLUDE =======================================*/
 
 #include "radio.h"
+#include "hal.h"
 
 /*
- * #ifdef HAL_HANDLERS
+ * #if HAL_HANDLERS
  * #include "frame.h"
  * #include "sicslowmac.h"
  * #endif
@@ -91,7 +92,7 @@
  */
 
 /*============================ VARIABLES =====================================*/
-#ifdef HAL_HANDLERS
+#if HAL_HANDLERS
 static hal_rx_start_isr_event_handler_t user_rx_event;
 static hal_trx_end_isr_event_handler_t user_trx_end_event;
 static radio_rx_callback rx_frame_callback;
@@ -160,8 +161,8 @@ static bool is_promiscuous;
 char rf2xx_process_flag; /** For debugging process call problems. */
 #endif
 
-#if DEBUGFLOWSIZE
-uint8_t debugflowsize,debugflow[DEBUGFLOWSIZE];
+#if (DEBUGFLOWSIZE > 0)
+uint8_t debugflowsize, debugflow[DEBUGFLOWSIZE];
 #endif
 
 /*============================ IMPLEMENTATION ================================*/
@@ -169,20 +170,20 @@ uint8_t debugflowsize,debugflow[DEBUGFLOWSIZE];
 /*---------------------------------------------------------------------------*/
 PROCESS(rf2xx_process, "RF2XX driver");
 /*---------------------------------------------------------------------------*/
-const struct radio_driver rf2xx_driver =
-  {				/* SECTION: */
-    rf2xx_init,			/** Initialization */
-//    rf2xx_prepare,		/** Data Transmission */
-//    rf2xx_transmit,		/** Data Transmission */
-//    rf2xx_send,		/** Data Transmission */
-    rf2xx_read,			/** Data Transmission */
-//    rf2xx_cca,		/** Initialization */
-//    rf2xx_receiving_packet,	/** Data Transmission */
-//    rf2xx_pending_packet,	/** Data Transmission */
-//    rf2xx_on,			/** States and Transitions */
-//    rf2xx_off			/** States and Transitions */
-  };
-
+//   const struct radio_driver rf2xx_driver =
+//  {				/* SECTION: */
+//    rf2xx_init,			/** Initialization */
+//    rf2xx_prepare,			/** Data Transmission */
+//    rf2xx_transmit,			/** Data Transmission */
+//    rf2xx_send,			/** Data Transmission */
+//    rf2xx_read,			/** Data Transmission */
+//    rf2xx_cca,			/** Initialization */
+//    rf2xx_receiving_packet,		/** Data Transmission */
+//    pending_packet,			/** Data Transmission */
+//    rf2xx_on,				/** States and Transitions */
+//    rf2xx_off				/** States and Transitions */
+//  };
+//
 /*============================================================================*/
 /*= Section: Initialization ==================================================*/
 /*----------------------------------------------------------------------------*/
@@ -229,7 +230,7 @@ const struct radio_driver rf2xx_driver =
  *
 */
 radio_status_t		/* PORTNOTE: in RF230BB driver it's 'int'. */
-#ifdef HAL_HANDLERS
+#if HAL_HANDLERS
 rf2xx_init(bool cal_rc_osc,
            hal_rx_start_isr_event_handler_t rx_event,
            hal_trx_end_isr_event_handler_t trx_end_event,
@@ -245,7 +246,7 @@ rf2xx_init(void)
     /* Wait in case VCC just applied. */
     delay_us(TIME_TO_ENTER_P_ON);
 
-    #ifdef RF2XX_CONF_CALIBRATION
+    #if RF2XX_CONF_CALIBRATION
     /*  Calibrate RC oscillator. */
     if (cal_rc_osc){
         calibrate_rc_osc_32k();
@@ -256,7 +257,7 @@ rf2xx_init(void)
     hal_init();
 
     /* Do HW reset of radio transeiver. */
-    #ifdef CODE_OPT_TEST
+    #if CODE_OPT_TEST
 
 	hal_set_rst_low();
 	hal_set_slptr_low();
@@ -264,7 +265,7 @@ rf2xx_init(void)
 	hal_set_rst_high();
 
     #else /* Use functions. */
-    rf2xx_reset_trx();
+    	rf2xx_reset_trx();
     #endif
 
     /* Force transition to TRX_OFF. */
@@ -293,7 +294,7 @@ rf2xx_init(void)
 #endif
     }
 
-#ifdef HAL_HANDLERS
+#if HAL_HANDLERS
     /*  Set callbacks for events.  Save user's rx_event, which we will */
     /*  call from radio_rx_start_event() and radio_trx_end_event(). */
     user_rx_event = rx_event;
@@ -309,7 +310,7 @@ rf2xx_init(void)
 
 /* If RF2XX_CONF_AUTO_CRC defined, then automatic CRC is enabled;
  * otherwise it is disabled and then HAL_CALC_CRC can be used. */
-#ifdef CODE_OPT_TEST /* Disable rearly called functions. */
+#if CODE_OPT_TEST /* Disable rearly called functions. */
 
 	#if RF2XX_CONF_AUTO_CRC /* Enable automatic CRC. */
 	hal_subregister_write(SR_TX_AUTO_CRC_ON, 1);
@@ -317,11 +318,10 @@ rf2xx_init(void)
 	hal_subregister_write(SR_TX_AUTO_CRC_ON, 0);
 	#endif /* RF2XX_CONF_AUTO_CRC */
 
-#endif /* CODE_OPT_TEST */
-
 #else /* Use functions. */
 	rf2xx_use_auto_tx_crc(RF2XX_CONF_AUTO_CRC);
-#endif
+
+#endif /* CODE_OPT_TEST */
 
     /* Start the packet receive process.*/
     process_start(&rf2xx_process, NULL);
@@ -355,7 +355,7 @@ rf2xx_cca(void)
     
     if(!RF2xx_receive_on) {
       radio_was_off = 1;
-      radio_on();
+      rf2xx_on();
     }
 
     /* cca = CCA_IS_1; */
@@ -363,7 +363,7 @@ rf2xx_cca(void)
     cca=1;
 
     if(radio_was_off) {
-      radio_off();
+      rf2xx_off();
     }
     return cca;
 
@@ -379,7 +379,7 @@ rf2xx_cca(void)
  *                      false, the automatic CRC will be disabled.
  *
 */
-#ifndef CODE_OPT_TEST
+#if !CODE_OPT_TEST
 void
 rf2xx_use_auto_tx_crc(bool auto_crc_on) /* PORTREF: line 928 */
 {					/* PORTNOTE: SR_TX_AUTO_CRC_ON has to be defined correctly in the header! */
@@ -414,7 +414,7 @@ rf2xx_use_auto_tx_crc(bool auto_crc_on) /* PORTREF: line 928 */
  *                          SLEEP state.
  *
 */
-#ifdef RF2XX_CONF_ENABLE_CSMA
+#if RF2XX_CONF_ENABLE_CSMA
 radio_status_t
 rf2xx_configure_csma(uint8_t seed0, uint8_t be_csma_seed1)
 {
@@ -467,20 +467,20 @@ radio_get_part_number(void) /* PORTREF: line 161 */
  *  \return Current channel, 11 to 26.
  *
 */
-#ifndef CODE_OPT_MACROS
+#if !CODE_OPT_MACROS
 uint8_t
 rf2xx_get_operating_channel(void) /* PORTREF: line 349 */
 {
     return hal_subregister_read(SR_CHANNEL);
 }
 #else
-#define rf2xx_get_operating_channel() hal_subregister_read(SR_CHANNEL);
+#define rf2xx_get_operating_channel() hal_subregister_read(SR_CHANNEL)
 #endif /* CODE_OPT_MACROS */
 /*----------------------------------------------------------------------------*/
 /** \brief This function returns current value channel of channel variable.
  *
 */
-/* #ifndef CODE_OPT_TEST */
+/* #if !CODE_OPT_TEST */
 uint8_t
 rf2xx_get_channel(void)
 {
@@ -550,7 +550,7 @@ rf2xx_set_operating_channel(uint8_t channel) /* PORTREF: line 366 */
 /** \brief This function set the value of SR_CHANNEL to value of channel variable.
  *
 */
-/* #ifndef CODE_OPT_TEST */
+/* #if !CODE_OPT_TEST */
 void
 rf2xx_set_channel(uint8_t c)
 {
@@ -574,7 +574,7 @@ rf2xx_set_channel(uint8_t c)
  *  \retval 0 Not coordinator.
  *  \retval 1 Coordinator role enabled.
 */
-#ifndef CODE_OPT_MACROS
+#if !CODE_OPT_MACROS
 uint8_t
 rf2xx_get_device_role(void)
 {
@@ -610,14 +610,14 @@ rf2xx_set_pan_addr(unsigned pan, unsigned addr, const uint8_t ieee_addr[8])
   PRINTF("rf2xx: PAN=%x ShortAddress=%x\n", pan, addr);
   
   uint8_t b;
-  abyte = pan & 0xFF;
+  b = pan & 0xFF;
   hal_register_write(RG_PAN_ID_0, b);
-  abyte = (pan >> 8*1) & 0xFF;
+  b = (pan >> 8*1) & 0xFF;
   hal_register_write(RG_PAN_ID_1, b);
 
-  abyte = addr & 0xFF;
+  b = addr & 0xFF;
   hal_register_write(RG_SHORT_ADDR_0, b);
-  abyte = (addr >> 8*1) & 0xFF;
+  b = (addr >> 8*1) & 0xFF;
   hal_register_write(RG_SHORT_ADDR_1, b);  
 
   if (ieee_addr != NULL) {
@@ -665,7 +665,7 @@ radio_get_pan_id(void)
  *  \param  new_pan_id Desired PANID. Can be any value from 0x0000 to 0xFFFF
  *
 */
-#ifndef CODE_OPT_TEST
+#if !CODE_OPT_TEST
 void
 radio_set_pan_id(uint16_t new_pan_id) /* PORTREF: line 1028 */
 {
@@ -703,7 +703,7 @@ radio_get_short_address(void)
  *  \param  new_short_address Short address to be used by the address filter.
  *
 */
-#ifndef CODE_OPT_TEST
+#if !CODE_OPT_TEST
 void
 radio_set_short_address(uint16_t new_short_address) /* PORTREF: line 1044 */
 {
@@ -746,7 +746,7 @@ radio_get_extended_address(uint8_t *extended_address)
  *  \param  extended_address Extended address to be used by the address filter.
  *
 */
-#ifndef CODE_OPT_TEST
+#if !CODE_OPT_TEST
 void
 radio_set_extended_address(uint8_t *extended_address) /* PORTREF: line 1061 */
 {								/* PORTNOTE: Atmel uses a loop here. */
@@ -771,12 +771,12 @@ radio_set_extended_address(uint8_t *extended_address) /* PORTREF: line 1061 */
 uint8_t
 rf2xx_get_tx_power_level(void) /* PORTREF: line 457 */
 {
-    #ifndef CODE_OPT_MINIMAL
-    uint8_t powe = TX_PWD_UNDEFINED;
+    #if !CODE_OPT_MINIMAL
+    uint8_t tx_power = TX_PWR_UNDEFINED;
     if (radio_is_sleeping()){
     	PRINTF("rf2xx_get_tx_power_level(): The radio is sleeping.\n");
     } else {
-    		tx_power = hal_subregister_read(SR_TX_PWD);
+    		tx_power = hal_subregister_read(SR_TX_PWR);
     }
     return tx_power;
     #else /* TODO: check what's really needed and when. */
@@ -832,7 +832,7 @@ rf2xx_set_tx_power_level(uint8_t power_level) /* PORTREF: line 433 */
  *  \return CCA mode currently used, 0 to 3.
  *
 */
-#ifndef CODE_OPT_MACROS
+#if !CODE_OPT_MACROS
 uint8_t
 rf2xx_get_cca_mode(void) /* PORTREF: line 468 */
 {
@@ -931,13 +931,13 @@ rf2xx_get_raw_rssi(void)
     /* The RSSI measurement should only be done in RX_ON or BUSY_RX. */
     if (!RF2xx_receive_on) { /* PORTNOTE: this can be defined as a macro. */ 
        radio_was_off = 1;
-       radio_on();
+       rf2xx_on();
     }
 
     retval = (int)((signed char)hal_subregister_read(SR_RSSI));
 
     if(radio_was_off) { /* Together with this. */
-      radio_off();
+      rf2xx_off();
     }
 
     return retval;
@@ -966,10 +966,10 @@ radio_get_saved_rssi_value(void) /* PORTREF: line 198 */
  * \return The LQI value, which ranges from 0 to 255.
  *
 */
-u8 radio_get_saved_lqi_value(void) /* PORTREF: line 209 */
-{
-    return ((rx_frame_t*)mac_buffer_rx)->lqi; /* TODO: Check if this works with the DS. */
-}
+//uint8_t radio_get_saved_lqi_value(void) /* PORTREF: line 209 */
+//{
+//    return ((hal_rx_frame_t*)mac_buffer_rx)->lqi; /* TODO: Check if this works with the DS. */
+//}
 
 /*----------------------------------------------------------------------------*/
 /** \brief This function returns the current ED threshold used by the CCA algorithm.
@@ -977,7 +977,7 @@ u8 radio_get_saved_lqi_value(void) /* PORTREF: line 209 */
  *  \return Current ED threshold, 0 to 15.
  *
 */
-#ifndef CODE_OPT_MACROS
+#if !CODE_OPT_MACROS
 uint8_t
 rf2xx_get_ed_threshold(void) /* PORTREF: line 480 */
 {
@@ -989,7 +989,7 @@ rf2xx_get_ed_threshold(void) /* PORTREF: line 480 */
 
 /*============================================================================*/
 /*= Section: Battery Monitor =================================================*/
-#ifdef RF2XX_CONF_BATTERY_MONITOR
+#if RF2XX_CONF_BATTERY_MONITOR
 /*----------------------------------------------------------------------------*/
 /** \brief This function is used to configure the battery monitor module
  *
@@ -1059,14 +1059,14 @@ rf2xx_batmon_get_status(void) /* PORTREF: line 557 */
  *  \return Current threshold voltage, 0 to 15.
  *
 */
-#ifndef CODE_OPT_MACROS
+#if !CODE_OPT_MACROS
 uint8_t
 rf2xx_batmon_get_voltage_threshold(void) /* PORTREF: line 495 */
 {
     return hal_subregister_read(SR_BATMON_VTH);
 }
 #else
-#define rf2xx_batmon_get_voltage_threshold() hal_subregister_write(SR_BATMON_VTH)
+#define rf2xx_batmon_get_voltage_threshold() hal_subregister_read(SR_BATMON_VTH)
 #endif /* CODE_OPT_MACROS */
 /*----------------------------------------------------------------------------*/
 /** \brief This function returns if high or low voltage range is used.
@@ -1078,7 +1078,7 @@ rf2xx_batmon_get_voltage_threshold(void) /* PORTREF: line 495 */
  *  \retval 1 High voltage range selected.
  *
 */
-#ifndef CODE_OPT_MACROS
+#if !CODE_OPT_MACROS
 uint8_t
 rf2xx_batmon_get_voltage_range(void) /* PORTREF: line 510 */
 {
@@ -1154,7 +1154,7 @@ rf2xx_set_clock_speed(bool direct, uint8_t clock_speed) /* PORTREF: line 635 */
 
 /*============================================================================*/
 /*= Section: Radio Callibration ==============================================*/
-#ifdef RF2XX_CONF_CALIBRATION
+#if RF2XX_CONF_CALIBRATION
 /*----------------------------------------------------------------------------*/
 /** \brief  This function calibrates the Single Side Band Filter.
  *
@@ -1612,7 +1612,7 @@ on(void)
     hal_set_slptr_low();
     delay_us(TIME_SLEEP_TO_TRX_OFF);
     /* Wake time depends on board capacitance. */
-    #ifdef RF2XX_CONF_WAKEUP_DOUBLE_DELAY
+    #if RF2XX_CONF_WAKEUP_DOUBLE_DELAY
     delay_us(TIME_SLEEP_TO_TRX_OFF);
     #endif
     RF2xx_sleeping=0;
@@ -1622,9 +1622,9 @@ on(void)
   rf2xx_wait_idle();
 
 #if RF2XX_CONF_AACK
-  radio_set_trx_state(is_promiscuous ? RX_ON : RX_AACK_ON);
+  rf2xx_set_trx_state(is_promiscuous ? RX_ON : RX_AACK_ON);
 #else
-  radio_set_trx_state(RX_ON);
+  r2xx_set_trx_state(RX_ON);
 #endif
 /*  flushrx(); */
   DEBUGFLOW('O');
@@ -1637,7 +1637,7 @@ static char /* This counld be 'bool'. */
 rf2xx_is_idle(void)
 {
   uint8_t radio_state;
-  #ifndef CODE_OPT_MACROS
+  #if !CODE_OPT_MACROS
   radio_state = hal_subregister_read(SR_TRX_STATUS);
   #else
   radio_state = rf2xx_get_trx_state();
@@ -1671,11 +1671,11 @@ rf2xx_wait_idle(void)
  *  
  *  \note If CODE_OPT_TEST is defined this is not defined.
  */
-#ifdef CODE_OPT_TEST
+#if CODE_OPT_TEST
 bool
-rf2xx_is_ready_to_send()
+rf2xx_is_ready_to_send(void)
 {
-  switch(radio_get_trx_state()) {
+  switch(rf2xx_get_trx_state()) {
     case BUSY_TX:
     case BUSY_TX_ARET:
 	return false;
@@ -1688,7 +1688,7 @@ rf2xx_is_ready_to_send()
 /** \brief This functions sets is_promiscuous global variable to TRUE or FALSE.
  *         If RF2XX_CONF_AACK is enabled, it sets appropriate states.
  */
-/* #ifdef CODE_OPT_TEST */
+/* #if CODE_OPT_TEST */
 void
 rf2xx_set_promiscuous_mode(bool mode)
 {
@@ -1709,7 +1709,10 @@ rf2xx_set_promiscuous_mode(bool mode)
 /*----------------------------------------------------------------------------*/
 /** \brief This macro sets locked global varible to TRUE.
  */
-#define GET_LOCK() locked = 1
+#if DOXYGEN
+void GET_LOCK(){
+}
+#endif /* DOXYGEN */
 /*----------------------------------------------------------------------------*/
 /* TODOC */
 static void RELEASE_LOCK(void)
@@ -1769,7 +1772,7 @@ static void RELEASE_LOCK(void)
  *                                 transition between two states.
  *
 */
-#ifndef CODE_OPT_MACROS
+#if !CODE_OPT_MACROS
 static uint8_t
 rf2xx_get_trx_state(void) /* PORTREF: line 695 */
 {
@@ -1869,7 +1872,7 @@ rf2xx_set_trx_state(uint8_t new_state) /* PORTREF: line 740 */
 
     if (rf2xx_get_trx_state() == new_state){
 	set_state_status = RADIO_SUCCESS;
-	#ifdef HAL_HANDLERS
+	#if HAL_HANDLERS
 	/* set rx_mode flag based on mode we're changing to */
 	/* TODO: This has to be looked at ... */
 	if (new_state == RX_ON ||
@@ -1884,7 +1887,7 @@ rf2xx_set_trx_state(uint8_t new_state) /* PORTREF: line 740 */
     return set_state_status;
 }
 
-#ifdef HAL_HANDLERS
+#if HAL_HANDLERS
 /*---------------------------------------------------------------------------*/
 /**\brief Callback function, called when the radio receives an RX_START interrupt.
  *        This function reads the radio's RSSI reading for the frame that is being received.
@@ -2078,7 +2081,7 @@ radio_reset_state_machine(void) /* PORTREF: line 897 */
  *          the radio transceiver. If CODE_OPT_TEST is defined it is not defined.
  *
 */
-#ifndef CODE_OPT_TEST
+#if !CODE_OPT_TEST
 void
 rf2xx_reset_trx(void) /* PORTREF: line 910 */
 {
@@ -2101,11 +2104,11 @@ rf2xx_prepare(const void *payload, unsigned short payload_len)
   int ret = 0;
   uint8_t total_len,*pbuf;
 
-#ifdef RF2XX_CONF_TIMESTAMPS
+#if RF2XX_CONF_TIMESTAMPS
   struct timestamp timestamp;
 #endif /* RF2XX_CONF_TIMESTAMPS */
 
-#ifdef HAL_CALC_CRC
+#if HAL_CALC_CRC
   uint16_t checksum;
 #endif /* HAL_CALC_CRC */
 
@@ -2118,7 +2121,7 @@ rf2xx_prepare(const void *payload, unsigned short payload_len)
 
   RIMESTATS_ADD(lltx);
 
-#ifdef HAL_CALC_CRC
+#if HAL_CALC_CRC
   checksum = crc16_data(payload, payload_len, 0);
 #endif /* HAL_CALC_CRC */
  
@@ -2140,7 +2143,7 @@ rf2xx_prepare(const void *payload, unsigned short payload_len)
   memcpy(pbuf, payload, payload_len);
   pbuf += payload_len;
 
-#ifdef HAL_CALC_CRC
+#if HAL_CALC_CRC
   memcpy(pbuf, &checksum, CHECKSUM_LEN);
   pbuf += CHECKSUM_LEN;
 #endif /* HAL_CALC_CRC */
@@ -2153,7 +2156,7 @@ rf2xx_prepare(const void *payload, unsigned short payload_len)
 #endif /* RF2XX_CONF_TIMESTAMPS */
 
 #ifdef RF2XX_HOOK_TX_PACKET
-#ifndef HAL_CALC_CRC
+#if !HAL_CALC_CRC
   {
     /* Add a checksum before we log the packet out. */
     uint16_t checksum;
@@ -2226,7 +2229,7 @@ rf2xx_transmit(unsigned short payload_len)
   rtimer_clock_t tx_time = timesynch_time();
 #endif /* RF2XX_CONF_TIMESTAMPS */
 
-  #ifndef ATMEL_HAL_MISC
+  #if !ATMEL_HAL_MISC
   /* Toggle the SLP_TR pin to initiate the frame transmission. */
   hal_set_slptr_high();
   hal_set_slptr_low();
@@ -2332,7 +2335,7 @@ bail:
 }
 
 static int
-rf2xx_read(void *buf, unsigned short bufsieze)
+rf2xx_read(void *buf, unsigned short bufsize)
 {
 
   uint8_t len;
@@ -2477,7 +2480,7 @@ rf2xx_read(void *buf, unsigned short bufsieze)
   }
 #endif /* HAL_CALC_CRC */
 
-  #ifdef TODO_2
+  #if TODO_2
   #if 0
   /* Clean up in case of FIFO overflow!  This happens for every full
    * length frame and is signaled by FIFOP = 1 and FIFO = 0.
@@ -2517,7 +2520,7 @@ rf2xx_receiving_packet(void)
 {
 
   uint8_t radio_state;
-  #ifndef CODE_OPT_MACROS
+  #if !CODE_OPT_MACROS
   radio_state = hal_subregister_read(SR_TRX_STATUS);
   #else
   radio_state = rf2xx_get_trx_state();
@@ -2533,7 +2536,7 @@ rf2xx_receiving_packet(void)
 /*---------------------------------------------------------------------------*/
 /* TODOC */
 static int
-rf2xx_pending_packet(void)
+pending_packet(void)
 {
 
   if (pending) DEBUGFLOW('p');
@@ -2553,7 +2556,7 @@ rf2xx_pending_packet(void)
  *                          PLL_ON and TX_ARET_ON state. If any other state is
  *                          detected this error message will be returned.
  */
-#ifdef HAL_HANDLERS
+#if HAL_HANDLERS
 radio_status_t
 radio_send_data(uint8_t data_length, uint8_t *data)
 {
@@ -2579,7 +2582,7 @@ radio_send_data(uint8_t data_length, uint8_t *data)
 
     /*Do frame transmission.*/
 
-    #ifndef ATMEL_HAL_MISC
+    #if !ATMEL_HAL_MISC
     /* Toggle the SLP_TR pin to initiate the frame transmission. */
     hal_set_slptr_high();
     hal_set_slptr_low();
@@ -2607,7 +2610,7 @@ flushrx(void)
 
 /*---------------------------------------------------------------------------*/
 /* TODOC */
-#ifndef CODE_OPT_TEST /* Disabled for code size optimisation. */
+#if !CODE_OPT_TEST /* Disabled for code size optimisation. */
 uint8_t *
 radio_frame_data(void)
 {
@@ -2617,7 +2620,7 @@ radio_frame_data(void)
 
 /*---------------------------------------------------------------------------*/
 /* TODOC */
-#ifndef CODE_OPT_TEST /* Disabled for code size optimisation. */
+#if !CODE_OPT_TEST /* Disabled for code size optimisation. */
 uint8_t
 radio_frame_length(void)
 {

@@ -51,8 +51,8 @@
  *   $Id: radio.h,v 1.2 2008/10/14 18:37:28 c_oflynn Exp $
  */
 
-#ifndef RADIO_H
-#define RADIO_H
+#ifndef RADIO_RF2XX_H
+#define RADIO_RF2XX_H
 /*============================ INCLUDE =======================================*/
 #include <stdio.h>
 #include <string.h>
@@ -66,7 +66,7 @@
 #include "hal.h"
 #include "contiki.h"
 #include "process.h"
-#include "contiki-conf.h"
+#include "driver-conf.h"
 
 /*----------------------------------------------------------------------------*/
 /* #include "sicslowmac.h" */
@@ -75,6 +75,8 @@
 /* #include "dev/spi.h" */
 
 /*----------------------------------------------------------------------------*/
+#include "sys/rtimer.h"
+
 #include "net/packetbuf.h"
 #include "net/rime/rimestats.h"
 #include "net/netstack.h"
@@ -92,18 +94,18 @@
 
 /*============================ MACROS ========================================*/
 
-#ifndef RF2XX_CONF_AUTORETRIES
+#if RF2XX_CONF_AUTORETRIES
 	#define RF2XX_CONF_AUTORETRIES 2
 #endif
 
-#ifndef RF2XX_CONF_AACK
+#if RF2XX_CONF_AACK
 	#define RF2XX_CONF_AACK 1
 #endif
 
 #ifndef RF2XX_CONF_AUTO_CRC
-	#ifdef HAL_CALC_CRC
-	#undef HAL_CALC_CRC
-	#endif
+//	#ifdef HAL_CALC_CRC
+//	#undef HAL_CALC_CRC
+//	#endif
 	#define RF2XX_CONF_AUTO_CRC 1
 #endif
 
@@ -129,13 +131,15 @@
 /* Track flow through driver,
  * see contiki-raven-main.c for example of use.
  */
-#ifndef DEBUGFLOWSIZE
-	#define DEBUGFLOWSIZE 64
-#endif
+//#ifndef DEBUGFLOWSIZE
+//	#warning "DEBUGFLOWSIZE is set to 64 by default!"
+//	#define DEBUGFLOWSIZE 64
+//#endif
 
 #if DEBUGFLOWSIZE
 	#define DEBUGFLOW(c) if (debugflowsize<(DEBUGFLOWSIZE-1)) debugflow[debugflowsize++]=c
 #else
+	#warning "DEBUGFLOW() is disabled!"
 	#define DEBUGFLOW(c)
 #endif
 
@@ -184,14 +188,14 @@
 #define RADIO_BUSY_CHANNEL          (3)
 #define RADIO_MIN_IEEE_FRAME_LENGTH (5)
 
-#ifdef RF2XX_CONF_BATTERY_MONITOR
+#if RF2XX_CONF_BATTERY_MONITOR
 #define BATTERY_MONITOR_HIGHEST_VOLTAGE         ( 15 )
 #define BATTERY_MONITOR_VOLTAGE_UNDER_THRESHOLD ( 0 )
 #define BATTERY_MONITOR_HIGH_VOLTAGE            ( 1 )
 #define BATTERY_MONITOR_LOW_VOLTAGE             ( 0 )
 #endif
 
-#ifdef RF2XX_CONF_CALIBRATION
+#if RF2XX_CONF_CALIBRATION
 #define FTN_CALIBRATION_DONE                    ( 0 )
 #define PLL_DCU_CALIBRATION_DONE                ( 0 )
 #define PLL_CF_CALIBRATION_DONE                 ( 0 )
@@ -199,7 +203,7 @@
 #define RC_OSC_REFERENCE_COUNT_MIN  (0.995*F_CPU*31250UL/8000000UL)
 #endif
 
-/* #define delay_us( us )   ( _delay_loop_2( ( F_CPU / 4000000UL ) * ( us ) ) ) */
+#define delay_us( us )   ( _delay_loop_2( ( F_CPU / 4000000UL ) * ( us ) ) )
 
 /** \brief  This macro defines the start value for the RADIO_* status constants.
  *
@@ -301,25 +305,11 @@ typedef enum{
     TIME_RESET_TRX_OFF               = 37,  /**<  Transition time from RESET to TRX_OFF. */
 }radio_trx_timing_t; /* PORTREF: line 79 */
 
-#ifdef HAL_HANDLERS
+#if HAL_HANDLERS
 typedef void (*radio_rx_callback) (uint16_t data);
 #endif
 
 /*============================ STRUCTS ========================================*/
-const struct radio_driver rf2xx_driver =
-  {
-    rf2xx_init,
-    rf2xx_prepare,
-    rf2xx_transmit,
-    rf2xx_send,
-    rf2xx_read,
-    rf2xx_cca,
-    rf2xx_receiving_packet,
-    rf2xx_pending_packet,
-    rf2xx_on,
-    rf2xx_off
-  };
-
 #if RF2XX_CONF_TIMESTAMPS
 struct timestamp {
   uint16_t time;
@@ -341,7 +331,7 @@ struct timestamp {
 /*============================ PROTOTYPES ====================================*/
 
 /* == Initialization == */
-#ifdef HAL_HANDLERS
+#if HAL_HANDLERS
 radio_status_t rf2xx_init(bool cal_rc_osc,
                           hal_rx_start_isr_event_handler_t rx_event,
                           hal_trx_end_isr_event_handler_t trx_end_event,
@@ -354,18 +344,19 @@ radio_status_t rf2xx_init( void );
 
 radio_status_t rf2xx_cca( void );
 
-#ifndef CODE_OPT_TEST
+#if !CODE_OPT_TEST
 void           rf2xx_use_auto_tx_crc( bool auto_crc_on );
 #endif
 
-#ifdef RF2XX_CONF_ENABLE_CSMA
+#if RF2XX_CONF_ENABLE_CSMA
 radio_status_t rf2xx_configure_csma( uint8_t seed0, uint8_t be_csma_seed1 );
 #endif
 
 /* == Store and Read == */
-#ifdef CODE_OPT_MACROS
+/* #if CODE_OPT_MACROS */
 /* extern uint8_t hal_subregister_read(uint8_t address, uint8_t mask, uint8_t position); */
-#else
+/* #else */
+#if !CODE_OPT_MACROS
 uint8_t		rf2xx_get_operating_channel( void );
 uint8_t		rf2xx_get_device_role( void );
 uint8_t		rf2xx_get_cca_mode( void );
@@ -378,18 +369,18 @@ void		rf2xx_set_device_role( bool i_am_coordinator );
 
 void		rf2xx_set_pan_addr( unsigned pan,
 				    unsigned addr,
-				    const uint8_t ieee_addr[8] )
+				    const uint8_t ieee_addr[8] );
 
 uint16_t	radio_get_pan_id( void );
-#ifndef CODE_OPT_TEST
+#if !CODE_OPT_TEST
 void		radio_set_pan_id( uint16_t new_pan_id );
 #endif
 uint16_t	radio_get_short_address( void );
-#ifndef CODE_OPT_TEST
+#if !CODE_OPT_TEST
 void		radio_set_short_address( uint16_t new_short_address );
 #endif
 void		radio_get_extended_address( uint8_t *extended_address );
-#ifndef CODE_OPT_TEST
+#if !CODE_OPT_TEST
 void		radio_set_extended_address( uint8_t *extended_address );
 #endif
 uint8_t		rf2xx_get_tx_power_level( void );
@@ -401,11 +392,11 @@ radio_status_t	rf2xx_get_rssi_value( uint8_t *rssi );
 uint8_t		rf2xx_get_saved_rssi_value( void );
 uint8_t		radio_get_saved_lqi_value ( void );
 
-#ifdef RF2XX_CONF_BATTERY_MONITOR
+#if RF2XX_CONF_BATTERY_MONITOR
 /* == Battery Monitor ==*/
 radio_status_t	rf2xx_batmon_configure( bool range, uint8_t voltage_threshold );
 radio_status_t	rf2xx_batmon_get_status( void );
-#ifndef CODE_OPT_MACROS
+#if !CODE_OPT_MACROS
 uint8_t		rf2xx_batmon_get_voltage_threshold( void );
 uint8_t		rf2xx_batmon_get_voltage_range( void );
 #endif /* CODE_OPT_MACROS */
@@ -415,7 +406,7 @@ uint8_t		rf2xx_batmon_get_voltage_range( void );
 uint8_t		rf2xx_get_clock_speed( void );
 radio_status_t	rf2xx_set_clock_speed( bool direct, uint8_t clock_speed );
 
-#ifdef RF2XX_CONF_CALIBRATION
+#if RF2XX_CONF_CALIBRATION
 /* == Radio Callibration ==*/
 radio_status_t	rf2xx_calibrate_filter( void );
 radio_status_t	rf2xx_calibrate_pll( void );
@@ -424,27 +415,37 @@ void		calibrate_rc_osc_32k( void );
 #endif /* RF2XX_CONF_CALIBRATION */
 
 /* == States and Transitions ==*/
-#ifdef HAL_HANDLERS
-static void radio_rx_start_event(uint32_t const isr_timestamp, uint8_t const frame_length);
-static void radio_trx_end_event(uint32_t const isr_timestamp);
+#if HAL_HANDLERS
+static void radio_rx_start_event( uint32_t const isr_timestamp, uint8_t const frame_length );
+static void radio_trx_end_event( uint32_t const isr_timestamp );
 #endif
 
-void	on( void );
+int rf2xx_interrupt( void );
+static char rf2xx_is_idle( void );
+static void rf2xx_wait_idle( void );
+bool rf2xx_is_ready_to_send( void );
+
+static void	on( void );
 int	rf2xx_on( void );
-void	off( void );
+static void	off( void );
 int	rf2xx_off( void );
+
+#define GET_LOCK() locked = 1
+static void RELEASE_LOCK( void );
+
+static void radio_reset_state_machine( void );
 
 void		rf2xx_set_promiscuous_mode(bool m);
 
-#ifndef CODE_OPT_MACROS
-uint8_t		rf2xx_get_trx_state( void );
+#if !CODE_OPT_MACROS
+static uint8_t	rf2xx_get_trx_state( void );
 #endif
-radio_status_t	rf2xx_set_trx_state( uint8_t new_state );
-bool		radio_is_sleeping( void );
+static radio_status_t	rf2xx_set_trx_state( uint8_t new_state );
+static bool	radio_is_sleeping( void );
 radio_status_t	rf2xx_enter_sleep_mode( void );
 radio_status_t	rf2xx_leave_sleep_mode( void );
 void		rf2xx_reset_state_machine( void );
-#ifndef CODE_OPT_TEST
+#if !CODE_OPT_TEST
 void		rf2xx_reset_trx( void );
 #endif
 
@@ -456,16 +457,32 @@ static int rf2xx_send( const void *data, unsigned short len );
 static int rf2xx_read( void *buf, unsigned short bufsize );
 
 static int rf2xx_receiving_packet( void );
-static int rf2xx_pending_packet( void );
+/* static int rf2xx_pending_packet( void ); */
 
+static void flushrx( void );
 
-#ifdef HAL_HANDLERS
+#if HAL_HANDLERS
 radio_status_t radio_send_data( uint8_t data_length, uint8_t *data );
 #endif
-#ifndef CODE_OPT_TEST
+#if !CODE_OPT_TEST
 uint8_t      * radio_frame_data( void );
 uint8_t        radio_frame_length( void );
 #endif
+
+const struct radio_driver rf2xx_driver =
+  {
+    rf2xx_init,
+    rf2xx_prepare,
+    rf2xx_transmit,
+    rf2xx_send,
+    rf2xx_read,
+    rf2xx_cca,
+    rf2xx_receiving_packet,
+    pending_packet,
+    rf2xx_on,
+    rf2xx_off
+  };
+
 
 
 #endif /* RADIO_H */

@@ -88,6 +88,8 @@
 #define RX_AACK_ON_NOCLK         (29)
 /** Constant BUSY_RX_AACK_NOCLK for sub-register @ref SR_TRX_STATUS */
 #define BUSY_RX_AACK_NOCLK       (30)
+/** Constant STATE_TRANSITION for sub-register @ref SR_TRX_STATUS */
+#define STATE_TRANSITION         (31)
 /** Offset for register TRX_STATE */
 #define RG_TRX_STATE                     (0x02)
 /** Access parameters for sub-register TRAC_STATUS in register @ref RG_TRX_STATE */

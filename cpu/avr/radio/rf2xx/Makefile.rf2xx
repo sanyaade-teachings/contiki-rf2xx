@@ -1,2 +1,2 @@
-CONTIKI_CPU_DIRS           += radio/rf230
-CONTIKI_TARGET_SOURCEFILES += radio.c hal.c frame.c
+CONTIKI_CPU_DIRS           += radio/rf2xx
+CONTIKI_TARGET_SOURCEFILES += radio.c hal.c

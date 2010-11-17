@@ -73,16 +73,22 @@
 #include "contiki-conf.h"
 
 /* TODO: adjust ATMEL_RADIO and the PLATFORM definitions below to work together */
-#ifdef ATMEL_RADIO == RF23x
+/*
+#define RF23x 1
+#define RF212 2
+
+#if ATMEL_RADIO == RF23x
+*/
 #define RADIO_BAND B2400
 #include "at86rf23x_registermap.h"
-#ifdef ATMEL_RADIO == RF212
+/*
+#if ATMEL_RADIO == RF212
 #define RADIO_BAND B900
 #include "at86rf212_registermap.h"
 #else
 #error "Please define ATMEL_RADIO, use RF23x or RF212"
 #endif
-
+*/
 /*============================ MACROS ========================================*/
 
 /**\name Macros defined for the radio transceiver's access modes.
@@ -647,6 +653,7 @@
 	/* HAL */
 	#   define HAL_ENABLE_RADIO_INTERRUPT( ) EICRB |= 0x0C, EIMSK |= 0x20
 	#   define HAL_DISABLE_RADIO_INTERRUPT( ) EICRB &= ~0x0C, EIMSK &= ~0x20
+	#   define SR_TX_AUTO_CRC_ON SR_TX_AUTO_CRC_ON_231
 
 	#   define HAL_INIT_ADC()
 	#   define HAL_STOP_ADC()
@@ -970,7 +977,7 @@ typedef struct{
 	bool crc;	/**< Flag - did CRC pass for received frame? */
 } hal_rx_frame_t; /* PORTNOTE: Atmel doesn't have the hal_rx_frame_t here. */
 
-#ifdef HAL_HANDLERS
+#if HAL_HANDLERS
 
 /** RX_START event handler callback type.
  *		Is called with timestamp in IEEE 802.15.4 symbols and frame length.
@@ -1012,7 +1019,6 @@ typedef struct {
 /* == Initialization == */
 void hal_init( void );
 void hal_spi_init( void );
-void rf2xx_interrupt(void);
 
 /* == Flags == */
 #ifdef HAL_FLAGS
@@ -1060,9 +1066,12 @@ void hal_eeprom_read_block(uint8_t *addr, uint8_t length, uint8_t *dest);
 void hal_eeprom_write_block(uint8_t *addr, uint8_t length, uint8_t *src);
 #endif
 
+#if HAL_HANDLERS
 void hal_frame_read( hal_rx_frame_t *rx_frame, rx_callback_t rx_callback);
 void hal_frame_write( uint8_t *write_buffer, uint8_t length );
-
+#else
+void hal_frame_write( uint8_t *write_buffer, uint8_t length );
+#endif
 
 #if 0 /* TODO */
 
