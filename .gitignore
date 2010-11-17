@@ -1,8 +1,10 @@
-
+tags
+obj_*
+symbols.[ch]
+*.native
 *.elf
 *.bin
 *.lss
 *.map
 *.hex
 *.epp
-tags
