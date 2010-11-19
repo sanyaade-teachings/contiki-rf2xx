@@ -415,33 +415,33 @@ void		calibrate_rc_osc_32k( void );
 #endif /* RF2XX_CONF_CALIBRATION */
 
 /* == States and Transitions ==*/
-#if HAL_HANDLERS
+/* #if HAL_HANDLERS
 static void radio_rx_start_event( uint32_t const isr_timestamp, uint8_t const frame_length );
 static void radio_trx_end_event( uint32_t const isr_timestamp );
-#endif
+#endif */
 
 int rf2xx_interrupt( void );
-static char rf2xx_is_idle( void );
-static void rf2xx_wait_idle( void );
+/* static char rf2xx_is_idle( void ); */
+/* static void rf2xx_wait_idle( void ); */
 bool rf2xx_is_ready_to_send( void );
 
-static void	on( void );
+/* static void	on( void ); */
 int	rf2xx_on( void );
-static void	off( void );
+/* static void	off( void ); */
 int	rf2xx_off( void );
 
-#define GET_LOCK() locked = 1
-static void RELEASE_LOCK( void );
+/* #define GET_LOCK() locked = 1 */
+/* static void RELEASE_LOCK( void ); */
 
-static void radio_reset_state_machine( void );
+/* static void radio_reset_state_machine( void ); */
 
 void		rf2xx_set_promiscuous_mode(bool m);
 
-#if !CODE_OPT_MACROS
+/* #if !CODE_OPT_MACROS
 static uint8_t	rf2xx_get_trx_state( void );
-#endif
-static radio_status_t	rf2xx_set_trx_state( uint8_t new_state );
-static bool	radio_is_sleeping( void );
+#endif */
+/* static radio_status_t	rf2xx_set_trx_state( uint8_t new_state ); */
+/* static bool	radio_is_sleeping( void ); */
 radio_status_t	rf2xx_enter_sleep_mode( void );
 radio_status_t	rf2xx_leave_sleep_mode( void );
 void		rf2xx_reset_state_machine( void );
@@ -450,16 +450,18 @@ void		rf2xx_reset_trx( void );
 #endif
 
 /* == Data Transmission ==*/
-
-static int rf2xx_prepare( const void *data, unsigned short len );
-static int rf2xx_transmit( unsigned short len );
-static int rf2xx_send( const void *data, unsigned short len );
-static int rf2xx_read( void *buf, unsigned short bufsize );
-
-static int rf2xx_receiving_packet( void );
-/* static int rf2xx_pending_packet( void ); */
-
-static void flushrx( void );
+/*
+ * static int rf2xx_prepare( const void *data, unsigned short len );
+ * static int rf2xx_transmit( unsigned short len );
+ * static int rf2xx_send( const void *data, unsigned short len );
+ * static int rf2xx_read( void *buf, unsigned short bufsize );
+ * 
+ * static int rf2xx_receiving_packet( void );
+ * static int rf2xx_pending_packet( void );
+ * 
+ * static void flushrx( void );
+ *
+ */
 
 #if HAL_HANDLERS
 radio_status_t radio_send_data( uint8_t data_length, uint8_t *data );
@@ -469,7 +471,11 @@ uint8_t      * radio_frame_data( void );
 uint8_t        radio_frame_length( void );
 #endif
 
-const struct radio_driver rf2xx_driver =
+/* The struct radio_driver in radio.h is memory allocation
+ * for the driver entry points, it should be in radio.c.
+ *
+*/
+/* const struct radio_driver rf2xx_driver =
   {
     rf2xx_init,
     rf2xx_prepare,
@@ -478,11 +484,11 @@ const struct radio_driver rf2xx_driver =
     rf2xx_read,
     rf2xx_cca,
     rf2xx_receiving_packet,
-    pending_packet,
+    rf2xx_pending_packet,
     rf2xx_on,
     rf2xx_off
   };
-
+*/
 
 
 #endif /* RADIO_H */

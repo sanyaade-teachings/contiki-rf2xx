@@ -71,6 +71,7 @@
 	#include <avr/eeprom.h>
 #endif
 #include "contiki-conf.h"
+#include "driver-conf.h"
 
 /* TODO: adjust ATMEL_RADIO and the PLATFORM definitions below to work together */
 /*
@@ -902,6 +903,7 @@
 #define HAL_RX_START_MASK      ( 0x04 ) /**< Mask for the RX_START interrupt. */
 #define HAL_PLL_UNLOCK_MASK    ( 0x02 ) /**< Mask for the PLL_UNLOCK interrupt. */
 #define HAL_PLL_LOCK_MASK      ( 0x01 ) /**< Mask for the PLL_LOCK interrupt. */
+#define HAL_ED_READY_MASK      ( 0x10 ) /**< Mask for the ED_READY interrupt. */
 #define HAL_MIN_FRAME_LENGTH   ( 0x03 ) /**< A frame should be at least 3 bytes. */
 #define HAL_MAX_FRAME_LENGTH   ( 0x7F ) /**< A frame should no more than 127 bytes. */
 /** \} */
@@ -1030,7 +1032,7 @@ void	hal_clear_pll_lock_flag( void );
 #endif /* HAL_FLAGS */
 
 /* == Handlers for States and Transitions == */
-#ifdef HAL_HANDLERS
+#if HAL_HANDLERS
 
 hal_trx_end_isr_event_handler_t hal_get_trx_end_event_handler( void );
 void hal_set_trx_end_event_handler( hal_trx_end_isr_event_handler_t trx_end_callback_handle );
@@ -1070,6 +1072,7 @@ void hal_eeprom_write_block(uint8_t *addr, uint8_t length, uint8_t *src);
 void hal_frame_read( hal_rx_frame_t *rx_frame, rx_callback_t rx_callback);
 void hal_frame_write( uint8_t *write_buffer, uint8_t length );
 #else
+void hal_frame_read( hal_rx_frame_t *rx_frame);
 void hal_frame_write( uint8_t *write_buffer, uint8_t length );
 #endif
 

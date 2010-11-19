@@ -165,25 +165,67 @@ char rf2xx_process_flag; /** For debugging process call problems. */
 uint8_t debugflowsize, debugflow[DEBUGFLOWSIZE];
 #endif
 
+/*============================ PROTOTYPES ====================================*/
+
+/* Prototypes of function declared as 'static' should be only visible
+ * from the driver entry point in radio.c.
+ *
+*/
+
+/* == States and Transitions ==*/
+#if HAL_HANDLERS
+static void radio_rx_start_event( uint32_t const isr_timestamp, uint8_t const frame_length );
+static void radio_trx_end_event( uint32_t const isr_timestamp );
+#endif
+
+static char rf2xx_is_idle( void );
+static void rf2xx_wait_idle( void );
+
+static void	on( void );
+static void	off( void );
+
+#define GET_LOCK() locked = 1
+static void RELEASE_LOCK( void );
+
+static void radio_reset_state_machine( void );
+
+#if !CODE_OPT_MACROS
+static uint8_t	rf2xx_get_trx_state( void );
+#endif
+static radio_status_t	rf2xx_set_trx_state( uint8_t new_state );
+static bool	radio_is_sleeping( void );
+
+/* == Data Transmission ==*/
+
+static int rf2xx_prepare( const void *data, unsigned short len );
+static int rf2xx_transmit( unsigned short len );
+static int rf2xx_send( const void *data, unsigned short len );
+static int rf2xx_read( void *buf, unsigned short bufsize );
+
+static int rf2xx_receiving_packet( void );
+static int rf2xx_pending_packet( void );
+
+static void flushrx( void );
+
 /*============================ IMPLEMENTATION ================================*/
 
-/*---------------------------------------------------------------------------*/
+/*----------------------------------------------------------------------------*/
 PROCESS(rf2xx_process, "RF2XX driver");
-/*---------------------------------------------------------------------------*/
-//   const struct radio_driver rf2xx_driver =
-//  {				/* SECTION: */
-//    rf2xx_init,			/** Initialization */
-//    rf2xx_prepare,			/** Data Transmission */
-//    rf2xx_transmit,			/** Data Transmission */
-//    rf2xx_send,			/** Data Transmission */
-//    rf2xx_read,			/** Data Transmission */
-//    rf2xx_cca,			/** Initialization */
-//    rf2xx_receiving_packet,		/** Data Transmission */
-//    pending_packet,			/** Data Transmission */
-//    rf2xx_on,				/** States and Transitions */
-//    rf2xx_off				/** States and Transitions */
-//  };
-//
+/*----------------------------------------------------------------------------*/
+const struct radio_driver rf2xx_driver =
+{				/* SECTION: */
+  rf2xx_init,				/** Initialization */
+  rf2xx_prepare,			/** Data Transmission */
+  rf2xx_transmit,			/** Data Transmission */
+  rf2xx_send,				/** Data Transmission */
+  rf2xx_read,				/** Data Transmission */
+  rf2xx_cca,				/** Initialization */
+  rf2xx_receiving_packet,		/** Data Transmission */
+  rf2xx_pending_packet,			/** Data Transmission */
+  rf2xx_on,				/** States and Transitions */
+  rf2xx_off				/** States and Transitions */
+};
+
 /*============================================================================*/
 /*= Section: Initialization ==================================================*/
 /*----------------------------------------------------------------------------*/
@@ -1930,7 +1972,8 @@ radio_trx_end_event(uint32_t const isr_timestamp)
 	parsed_frame.time = isr_timestamp;
 	parsed_frame.rssi = rssi_val;
 	
-	hal_frame_read(&rx_frame, NULL);
+	/* hal_frame_read(&rx_frame, NULL); */
+	hal_frame_read(&rx_frame);
 	rx_frame_parse(&rx_frame, &parsed_frame);
 	}
 
@@ -2471,14 +2514,14 @@ rf2xx_read(void *buf, unsigned short bufsize)
     packetbuf_set_attr(PACKETBUF_ATTR_TIMESTAMP, t.time);
 #endif /* RF2XX_CONF_TIMESTAMPS */
 
-#if HAL_CALC_CRC
+//#if HAL_CALC_CRC
   } else {
     DEBUGFLOW('X');
     PRINTF("rf2xx_read(): CRC failed!");
     RIMESTATS_ADD(badcrc);
     len = AUX_LEN;
   }
-#endif /* HAL_CALC_CRC */
+//#endif /* HAL_CALC_CRC */
 
   #if TODO_2
   #if 0
@@ -2536,7 +2579,7 @@ rf2xx_receiving_packet(void)
 /*---------------------------------------------------------------------------*/
 /* TODOC */
 static int
-pending_packet(void)
+rf2xx_pending_packet(void)
 {
 
   if (pending) DEBUGFLOW('p');

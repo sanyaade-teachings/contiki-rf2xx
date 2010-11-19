@@ -14,7 +14,7 @@
 #define ATMEL_RADIO_ISR		0
 
 /** Set rx_mode in hal_register_write() (hal.c) */
-#define ATMEL_REGISTER_WRITE	DEFAULT_VALUE
+#define ATMEL_REGISTER_WRITE	!DEFAULT_VALUE
 
 /** Use various Atmel's techniques in HAL (hal.c)
  ** This include poking of SLP_TR in hal_frame_write(),
@@ -39,6 +39,7 @@
 /* CSMA is not yet in use. */
 #define RADIO_CONF_ENABLE_CSMA 0
 
+#define HAL_HANDLERS 0
 #define HAL_CALC_CRC 0
 #define RF2XX_CONF_TIMESTAMPS 0
 #define RF2XX_CONF_AUTO_CRC 0
@@ -49,3 +50,5 @@
 #define RF2XX_CONF_BATTERY_MONITOR 0
 #define RF2XX_CONF_WAKEUP_DOUBLE_DELAY 0
 #define RF2XX_CONF_AUTORETRIES 0
+
+#define HAL_MINIMAL 1

@@ -60,11 +60,11 @@
  *  This file contains low-level radio driver code.
  */
 
-#ifndef HAL_MINIMAL		/** Dsaible/Ebnable all sections below: */
-	#define HAL_SRAM	/**< SRAM read/write */
-	#define HAL_FLAGS	/**< various flags */
-	#define HAL_EEPROM	/**< EEPROM block read/write */
-	#define HAL_HANDLERS	/**< TRX_END/RX_START event handlers */
+#if !HAL_MINIMAL		/** Dsaible/Ebnable all sections below: */
+	#define HAL_SRAM	1	/**< SRAM read/write */
+	#define HAL_FLAGS	1	/**< various flags */
+	#define HAL_EEPROM	1	/**< EEPROM block read/write */
+	#define HAL_HANDLERS	0	/**< TRX_END/RX_START event handlers */
 #endif
 
 /*============================ INCLUDE =======================================*/
@@ -88,7 +88,7 @@ static uint16_t hal_system_time = 0;
 
 /* Subsection: Flags */
 
-#ifdef HAL_FLAGS
+#if HAL_FLAGS
 
 static uint8_t volatile hal_bat_low_flag; /**<  BAT_LOW flag. */
 static uint8_t volatile hal_pll_lock_flag;   /**<  PLL_LOCK flag. */
@@ -97,7 +97,7 @@ static uint8_t volatile hal_pll_lock_flag;   /**<  PLL_LOCK flag. */
 
 /* Subsection: Callbacks */
 
-#ifdef HAL_HANDLERS
+#if HAL_HANDLERS
 
 /** \brief This function is called when a rx_start interrupt is signaled.
  *
@@ -138,7 +138,7 @@ hal_init(void) /* PORTREF: line 95 */
 {
     /* Reset variables used in file. */
     hal_system_time = 0;
-    #ifdef HAL_FLAGS
+    #if HAL_FLAGS
     hal_reset_flags();
     #endif
 
@@ -166,7 +166,7 @@ void hal_spi_init(void) /* PORTREF: line 76 */
 {
     /* SPI Specific Initialization. */
 
-#ifdef ATMEL_SPI_INIT
+#if ATMEL_SPI_INIT
     /* Set SCK and MOSI as output. */
     HAL_DDR_SPI  |= (1 << HAL_DD_SCK) | (1 << HAL_DD_MOSI);
     /* Set CLK high. */
@@ -191,7 +191,7 @@ void hal_spi_init(void) /* PORTREF: line 76 */
 
 /*============================================================================*/
 /*= Section: Flags ===========================================================*/
-#ifdef HAL_FLAGS
+#if HAL_FLAGS
 /*----------------------------------------------------------------------------*/
 /** \brief  This function reset the interrupt flags and interrupt event handlers
  *          (Callbacks) to their default value.
@@ -205,9 +205,11 @@ hal_reset_flags(void)
     hal_bat_low_flag     = 0;
     hal_pll_lock_flag    = 0;
 
+    #if HAL_HANDLERS
     /* Reset Associated Event Handlers. */
     rx_start_callback = NULL;
     trx_end_callback  = NULL;
+    #endif
 
     AVR_LEAVE_CRITICAL_REGION();
 }
@@ -263,7 +265,7 @@ hal_clear_pll_lock_flag(void)
 
 /*============================================================================*/
 /*= Section: Handlers for States and Transitions =============================*/
-#ifdef HAL_HANDLERS
+#if HAL_HANDLERS
 /*=================================================[TRX_END]==================*/
 /*----------------------------------------------------------------------------*/
 /** \brief  This function is used to retrieve TRX_END event handler.
@@ -422,7 +424,7 @@ hal_register_write(uint8_t address, uint8_t value) /* PORTREF: line 152 */
 
     AVR_LEAVE_CRITICAL_REGION();
 
-    #ifdef ATMEL_REGISTER_WRITE	/* TODO: check is the code below is elsewhere. */
+    #if ATMEL_REGISTER_WRITE	/* TODO: check is the code below is elsewhere. */
     /* Set the rx_mode variable based on how we set the radio. */
     if ((address & ~HAL_TRX_CMD_RW) == RG_TRX_STATE)
     {
@@ -489,7 +491,7 @@ hal_subregister_write(uint8_t address, uint8_t mask, uint8_t position,
     hal_register_write(address, value);
 }
 
-#ifdef HAL_SRAM
+#if HAL_SRAM
 /*----------------------------------------------------------------------------*/
 /** \brief Read SRAM
  *
@@ -586,7 +588,7 @@ hal_sram_write(uint8_t address, uint8_t length, uint8_t *data) /* PORTREF: line 
 }
 #endif /* HAL_SRAM */
 
-#ifdef HAL_EEPROM
+#if HAL_EEPROM
 /*----------------------------------------------------------------------------*/
 /**\brief General-purpose function to read data out of EEPROM
  *
@@ -627,7 +629,11 @@ void hal_eeprom_write_block(uint8_t *addr, uint8_t length, uint8_t *src) /* PORT
  *  \param  rx_callback Pointer to callback function for receiving one byte at a time.
  */
 void
+#if HAL_HANDLERS
 hal_frame_read(hal_rx_frame_t *rx_frame, rx_callback_t rx_callback) /* PORTREF: line 245 */
+#else
+hal_frame_read(hal_rx_frame_t *rx_frame)
+#endif
 {
 
 /* TODO: for optimisation this should be defined in two version,
@@ -639,7 +645,7 @@ hal_frame_read(hal_rx_frame_t *rx_frame, rx_callback_t rx_callback) /* PORTREF: 
 			 ***************************************************/
     uint8_t *rx_data=0;
 
-#ifdef HAL_HANDLERS
+#if HAL_HANDLERS
     /*  Check that we have either valid frame pointer or callback pointer. */
     if (!rx_frame && !rx_callback)
 	return;
@@ -661,15 +667,15 @@ hal_frame_read(hal_rx_frame_t *rx_frame, rx_callback_t rx_callback) /* PORTREF: 
 
     /* Check for correct frame length. */
     if ((frame_length >= HAL_MIN_FRAME_LENGTH) && (frame_length <= HAL_MAX_FRAME_LENGTH)){
-	#ifdef HAL_CALC_CRC
+	#if HAL_CALC_CRC
 	uint16_t crc = 0;
 	#endif
-	#ifdef HAL_HANDLERS
+	#if HAL_HANDLERS
 	if (rx_frame){
 	#endif
 	    rx_data = (rx_frame->data);
 	    rx_frame->length = frame_length; /* Store frame length. */
-	#ifdef HAL_HANDLERS
+	#if HAL_HANDLERS
 	} else {
 	    rx_callback(frame_length);
 	}
@@ -683,11 +689,11 @@ hal_frame_read(hal_rx_frame_t *rx_frame, rx_callback_t rx_callback) /* PORTREF: 
 	    uint8_t tempData = SPDR;
 	    SPDR = HAL_DUMMY_VALUE;
 
-	    #ifdef HAL_HANDLERS
+	    #if HAL_HANDLERS
 	    if (rx_frame){
 	    #endif
 		*rx_data++ = tempData;
-	    #ifdef HAL_HANDLERS
+	    #if HAL_HANDLERS
 	    } else {
 		rx_callback(tempData);
 	    }
@@ -703,11 +709,11 @@ hal_frame_read(hal_rx_frame_t *rx_frame, rx_callback_t rx_callback) /* PORTREF: 
 
 	/* Read LQI value for this frame
 	 * and store it in lqi . */
-	#ifdef HAL_HANDLERS
+	#if HAL_HANDLERS
 	if (rx_frame){
 	#endif
 	    rx_frame->lqi = SPDR;
-	#ifdef HAL_HANDLERS
+	#if HAL_HANDLERS
 	} else {				/* PORTNOTE: Atmel code doesn't do callbacks. */
 	    rx_callback(SPDR);
 	}
@@ -715,7 +721,7 @@ hal_frame_read(hal_rx_frame_t *rx_frame, rx_callback_t rx_callback) /* PORTREF: 
 	
 	HAL_SS_HIGH();
 
-	#ifdef HAL_CALC_CRC
+	#if HAL_CALC_CRC
 	/* Check calculated CRC, and set crc field in hal_rx_frame_t accordingly. */
 	if (rx_frame){	/* PORTNOTE: Neither it does this! */
 	    rx_frame->crc = (crc == HAL_CALCULATED_CRC_OK);
@@ -750,7 +756,7 @@ hal_frame_write(uint8_t *write_buffer, uint8_t length) /* PORTREF: line 311 */
 
     AVR_ENTER_CRITICAL_REGION();
 
-#ifdef ATMEL_HAL_MISC /* PORTNOTE: This should be uncoditional (probably). */
+#if ATMEL_HAL_MISC /* PORTNOTE: This should be uncoditional (probably). */
 
     /* Toggle the SLP_TR pin to initiate the frame transmission. */
     hal_set_slptr_high();
@@ -813,7 +819,7 @@ void RADIO_VECT(void);
 ISR(RADIO_VECT) /* PORTREF: line 438 */
 {
 
-    #ifdef ATMEL_RADIO_ISR
+    #if ATMEL_RADIO_ISR
     /* Read Interrupt source. */
     uint8_t interrupt_source = hal_register_read(RG_IRQ_STATUS);
 
@@ -901,7 +907,7 @@ ISR(RADIO_VECT) /* PORTREF: line 438 */
     /* Handle the incomming interrupt. Prioritized. */
     if ((interrupt_source & HAL_RX_START_MASK)){	/* PORTREF: line 456 */
 	INTERRUPTDEBUG(10);
-	#ifdef HAL_HANDLERS
+	#if HAL_HANDLERS
         if(rx_start_callback != NULL){
             /* Read Frame length and call rx_start callback. */
             HAL_SS_LOW();
@@ -922,7 +928,7 @@ ISR(RADIO_VECT) /* PORTREF: line 438 */
 
     } else if (interrupt_source & HAL_TRX_END_MASK){	/* PORTREF: line 443 */
 	INTERRUPTDEBUG(11);
-	#ifdef HAL_HANDLERS
+	#if HAL_HANDLERS
         if(trx_end_callback != NULL){
             trx_end_callback(isr_timestamp);
         }
@@ -959,7 +965,7 @@ ISR(RADIO_VECT) /* PORTREF: line 438 */
         ; /* TODO: look if anything useful could be done here */
     } else if (interrupt_source & HAL_PLL_LOCK_MASK){
     	INTERRUPTDEBUG(15);
-	#ifdef HAL_FLAGS
+	#if HAL_FLAGS
         hal_pll_lock_flag++;
 	#endif
         ;
@@ -970,7 +976,7 @@ ISR(RADIO_VECT) /* PORTREF: line 438 */
         uint8_t trx_isr_mask = hal_register_read(RG_IRQ_MASK);
         trx_isr_mask &= ~HAL_BAT_LOW_MASK;
         hal_register_write(RG_IRQ_MASK, trx_isr_mask);
-	#ifdef HAL_FLAGS
+	#if HAL_FLAGS
         hal_bat_low_flag++; /* Increment BAT_LOW flag. */
 	#endif
 	INTERRUPTDEBUG(16);
