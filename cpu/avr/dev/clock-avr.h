@@ -36,7 +36,7 @@
    */ \
   TIMSK = _BV (OCIE0);
 
-#elif defined (__AVR_ATmega1284P__) || (__AVR_AT90USB1287__) || (__AVR_ATmega1281__)
+#elif defined (__AVR_ATmega1284P__) || (__AVR_AT90USB1287__) || (__AVR_ATmega1281__) || (__AVR_ATmega128RFA1__)
 /*
   The Raven has a 32768Hz watch crystal that can be used to clock the timer
   while the 1284p is sleeping. The Jackdaw has pads for a crystal. The crystal

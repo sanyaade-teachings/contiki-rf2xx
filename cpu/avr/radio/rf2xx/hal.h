@@ -57,39 +57,53 @@
 
 #ifndef HAL_AVR_H
 #define HAL_AVR_H
+
+#if !defined(__AVR__)
+	#error "This header is for AVR platforms only!"
+#else
+
 /*============================ INCLUDE =======================================*/
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
-#ifdef HAL_CALC_CRC
+#if HAL_CALC_CRC
 	#include <util/crc16.h>
 #endif
 #include <util/delay.h>
-#ifdef HAL_EEPROM
+#if HAL_EEPROM
 	#include <avr/eeprom.h>
 #endif
 #include "contiki-conf.h"
 #include "driver-conf.h"
 
 /* TODO: adjust ATMEL_RADIO and the PLATFORM definitions below to work together */
-/*
 #define RF23x 1
 #define RF212 2
 
-#if ATMEL_RADIO == RF23x
-*/
-#define RADIO_BAND B2400
-#include "at86rf23x_registermap.h"
+#define INTEGRATED 1
+#define PERIPHERAL 2
+
+/* Perhaps it's better to define it for each board */
 /*
+ #if defined(__AVR_ATmega128RFA1__)
+	#define RADIO_TYPE INTEGRATED
+ #else
+	#define RADIO_TYPE PERIPHERAL
+ #endif
+*/
+
+/*
+#if ATMEL_RADIO == RF23x
+	#include "at86rf23x_registermap.h"
 #if ATMEL_RADIO == RF212
-#define RADIO_BAND B900
-#include "at86rf212_registermap.h"
+	#include "at86rf212_registermap.h"
 #else
-#error "Please define ATMEL_RADIO, use RF23x or RF212"
+	#error "Please define ATMEL_RADIO, use RF23x or RF212"
 #endif
 */
+
 /*============================ MACROS ========================================*/
 
 /**\name Macros defined for the radio transceiver's access modes.
@@ -141,6 +155,9 @@
 #define ZIGBIT09   8  /**< ZigBit module, operating in the 900MHz band */
 #define ZIGBIT24   9  /**< ZigBit module, operating in the 2.4GHz band */
 #define DSK001    10  /**< TRT Button, model DSK001 */
+
+#define ATMEGA128RFA1 11
+
 /** \} */
 
 /**
@@ -155,7 +172,7 @@
    \{
 */
 #define BAND900    1
-#define BAND2400   2
+#define GLOBAL   2
 /** \} */
 
 #if defined DOXYGEN
@@ -174,6 +191,9 @@
 	#ifndef __AVR_ATmega1281__
 		#error "Incorrect MCU for Platform! Check Makefile"
 	#endif
+
+	#   define RADIO_TYPE PERIPHERAL
+	#   define RADIO_BAND GLOBAL
 
 	/* SPI */
 	#   define SSPORT     B
@@ -206,7 +226,6 @@
 	// TXCWPORT?
 	// TXCWPIN?
 	/* TRX */
-	#   define RADIO_BAND BAND2400
 	#   define RADIO_VECT TIMER1_CAPT_vect
 	/* HAL */
 	#   define HAL_ENABLE_RADIO_INTERRUPT( ) ( TIMSK1 |= ( 1 << ICIE1 ) ),  \
@@ -239,6 +258,9 @@
    Change these values to port to other platforms.
    \{
 */
+	#   define RADIO_TYPE PERIPHERAL
+	#   define RADIO_BAND GLOBAL	 /**< Radio Frequency Band */
+
 	/* SPI */
 	#   define SSPORT     B          /**< Radio (SPI Slave) Select port */
 	#   define SSPIN      (0x00)     /**< Radio (SPI Slave) Select pin */
@@ -266,7 +288,6 @@
 	// TXCWPORT?
 	// TXCWPIN?
 	/* TRX */
-	#   define RADIO_BAND BAND2400	 /**< Radio Frequency Band */
 	#   define RADIO_VECT INT0_vect  /**< Radio Interrupt Vector */
 	/* HAL */
 	    /** Macro to enable the radio interrupt. */
@@ -301,6 +322,9 @@
 		#error "Incorrect MCU for Platform! Check Makefile"
 	#endif
 
+	#   define RADIO_TYPE PERIPHERAL
+	#   define RADIO_BAND GLOBAL
+
 	/* SPI */
 	#   define SSPORT     B
 	#   define SSPIN      (0x04)
@@ -330,7 +354,6 @@
 	#   define USART      1
 
 	/* TRX */
-	#   define RADIO_BAND BAND2400
 	#   define RADIO_VECT TIMER1_CAPT_vect
 	/* HAL */
 	#   define HAL_ENABLE_RADIO_INTERRUPT( ) ( TIMSK1 |= ( 1 << ICIE1 ) ),  \
@@ -357,6 +380,9 @@
 		#error "Incorrect MCU for Platform! Check Makefile"
 	#endif
 
+	#   define RADIO_TYPE PERIPHERAL
+	#   define RADIO_BAND BAND900
+
 	/* SPI */
 	#   define SSPORT     B
 	#   define SSPIN      (0x00)
@@ -381,7 +407,6 @@
 	#   define USART      1
 
 	/* TRX */
-	#   define RADIO_BAND BAND900
 	#   define RADIO_VECT INT0_vect
 	/* HAL */
 	#   define HAL_ENABLE_RADIO_INTERRUPT( ) EICRA |= 3, EIMSK |= 1
@@ -429,6 +454,9 @@
 		#error "Incorrect MCU for Platform! Check Makefile"
 	#endif
 
+	#   define RADIO_TYPE PERIPHERAL
+	#   define RADIO_BAND GLOBAL
+
 	/* SPI */
 	#   define SSPORT     B
 	#   define SSPIN      (0x04)
@@ -460,7 +488,6 @@
 	#   define TXCWPORT   B
 	#   define TXCWPIN    (0x00)
 	/* TRX */
-	#   define RADIO_BAND BAND2400
 	#   define RADIO_VECT TIMER1_CAPT_vect
 	/* HAL */
 	#   define HAL_ENABLE_RADIO_INTERRUPT( ) ( TIMSK1 |= ( 1 << ICIE1 ) ),  \
@@ -491,6 +518,9 @@
 		#error "Incorrect MCU for Platform! Check Makefile"
 	#endif
 
+	#   define RADIO_TYPE PERIPHERAL
+	#   define RADIO_BAND GLOBAL
+
 	/* SPI */
 	#   define SSPORT     B
 	#   define SSPIN      (0x00)
@@ -518,7 +548,6 @@
 	#   define TXCWPORT   B
 	#   define TXCWPIN    (0x07)
 	/* TRX */
-	#   define RADIO_BAND BAND2400
 	#   define RADIO_VECT TIMER1_CAPT_vect
 	/* HAL */
 	#   define HAL_ENABLE_RADIO_INTERRUPT( ) ( TIMSK1 |= ( 1 << ICIE1 ) ),  \
@@ -562,6 +591,9 @@
 		#error "Incorrect MCU for Platform! Check Makefile"
 	#endif
 
+	#   define RADIO_TYPE PERIPHERAL
+	#   define RADIO_BAND BAND900
+
 	/* SPI */
 	#   define SSPORT     B
 	#   define SSPIN      (0x02)
@@ -581,7 +613,6 @@
 	/* IRQ */
 	// IRQ?
 	/* TRX */
-	#   define RADIO_BAND BAND900
 	#   define RADIO_VECT PCINT0_vect
 
 	#   define PD7 7
@@ -639,12 +670,15 @@
 	/*
 	 * #ifndef RADIO_BAND
 	 * 	#warning "Setting Radio Frequency Band to 2.4GHz. Please define RADIO_BAND to use 900MHz."
-	 * 	#define RADIO_BAND BAND2400
+	 * 	#define RADIO_BAND GLOBAL
 	 * #endif
 	 */
+
+	 #define RADIO_TYPE	PERIPHERAL
+
 	 /* Define which band we're operating in - 900MHz or 2.4GHz. */
 	 #if PLATFORM==ZIGBIT24
-	     #define RADIO_BAND BAND2400
+	     #define RADIO_BAND GLOBAL
 	 #else
 	     #define RADIO_BAND BAND900
 	 #endif
@@ -698,6 +732,9 @@
 		#error "Incorrect MCU for Platform! Check Makefile"
 	#endif
 
+	#   define RADIO_TYPE PERIPHERAL
+	#   define RADIO_BAND GLOBAL
+
 	/* SPI */
 	#   define SSPORT     B
 	#   define SSPIN      (0x02)
@@ -718,7 +755,6 @@
 	#   define USART      0
 
 	/* TRX */
-	#   define RADIO_BAND BAND2400
 	#   define RADIO_VECT PCINT0_vect
 	/* HAL */
 	#   define HAL_ENABLE_RADIO_INTERRUPT( ) PCICR |= (1 << PCIE0), PCMSK0 |= (1 << PCINT1)
@@ -763,17 +799,37 @@
 	#define BUTTON_SETUP()
 	#define BUTTON_PRESSED()  0
 
+#elif ( PLATFORM==ATMEGA128RFA1 )
+/* ATmega1281 with internal AT86RF231 radio */
+
+	#ifndef __AVR_ATmega128RFA1__
+		#error "Incorrect MCU for Platform! Check Makefile"
+	#endif
+
+	#define RADIO_TYPE	INTEGRATED
+	#define RADIO_BAND	GLOBAL
+
+	#define SLPTRPORT	TRXPR
+	#define SLPTRPIN	1
+	#define USART		1
+	#define USARTVECT	USART1_RX_vect
+	#define TICKTIMER	3
+	#define HAS_CW_MODE
+	#define HAS_SPARE_TIMER
+
 #else
 
  #ifdef ATMEL_BOARD_SPEC
 	#warning "Using Atmel boars specs in hal.h"
-	#error "Platform undefined in hal.h"
+	//#error "Platform undefined in hal.h"
  #else
 	#warning "Using board.h"
 	#include "board.h"
  #endif
 
 #endif
+
+// #endif /* !__AVR_ATmega128RFA1__ */
 /** \} */
 
 /*============================ GENERAL MACROS ================================*/
@@ -825,6 +881,16 @@
  *       that the source code can directly use.
  * \{
  */
+#if defined(__AVR_ATmega128RFA1__)
+
+#define hal_set_rst_low( )	( TRXPR &= ~( 1 << TRXRST ) ) /**< This macro pulls the RST pin low. */
+#define hal_set_rst_high( )	( TRXPR |= ( 1 << TRXRST ) ) /**< This macro pulls the RST pin high. */
+#define hal_set_slptr_high( )	( TRXPR |= ( 1 << SLPTR ) ) /**< This macro pulls the SLP_TR pin high. */
+#define hal_set_slptr_low( )	( TRXPR &= ~( 1 << SLPTR ) ) /**< This macro pulls the SLP_TR pin low. */
+#define hal_get_slptr( ) 	( ( TRXPR & ( 1 << SLPTR ) ) >> SLPTR ) /**< Read current state of the SLP_TR pin (High/Low). */
+
+#else
+
 #define SLP_TR		SLPTRPIN          /**< Pin number that corresponds to the SLP_TR pin. */
 #define DDR_SLP_TR	DDR( SLPTRPORT )  /**< Data Direction Register that corresponds to the port where SLP_TR is connected. */
 #define PORT_SLP_TR	PORT( SLPTRPORT ) /**< Port (Write Access) where SLP_TR is connected. */
@@ -855,6 +921,8 @@
 #define HAL_DD_MISO           MISOPIN		/**< Data Direction bit for MISO. */
 #define HAL_PORT_SS           PORT( SSPORT )	/**< The SPI module PORT. */	/* PORTLABLE: COMPAT */
 #define HAL_DDR_SS            DDR( SSPORT )	/**< Data Direction register for the SPI port. */ /* PORTLABLE: COMPAT */
+
+#endif /* defined(__AVR_ATmega128RFA1__) */
 
 #define HAL_SS_HIGH( ) (HAL_PORT_SS |= ( 1 << HAL_DD_SS )) /**< MACRO for pulling SS high. */
 #define HAL_SS_LOW( )  (HAL_PORT_SS &= ~( 1 << HAL_DD_SS )) /**< MACRO for pulling SS low. */
@@ -926,12 +994,14 @@
 
 #ifndef HAL_ENABLE_RADIO_INTERRUPT
 	#warning "HAL_ENABLE_RADIO_INTERRUPT(): is a PLATFORM specific macro, it has to be defined!"
-	#error "HAL_ENABLE_RADIO_INTERRUPT(): macro not defined"
+	#warning "HAL_ENABLE_RADIO_INTERRUPT(): macro not defined"
+	//#define HAL_ENABLE_RADIO_INTERRUPT( )
 #endif
 
 #ifndef HAL_DISABLE_RADIO_INTERRUPT
 	#warning "HAL_DISABLE_RADIO_INTERRUPT(): is a PLATFORM specific macro, it has to be defined!"
-	#error "HAL_DISABLE_RADIO_INTERRUPT(): macro not defined"
+	#warning "HAL_DISABLE_RADIO_INTERRUPT(): macro not defined"
+	//#define HAL_DISABLE_RADIO_INTERRUPT( )
 #endif
 
 #define HAL_ENABLE_OVERFLOW_INTERRUPT( ) ( TIMSK1 |= ( 1 << TOIE1 ) ) /* PORTNOTE: Atmel code doesn't have this. */
@@ -973,10 +1043,10 @@ volatile char rf2xx_interrupt_flag=0;
  * \see hal_frame_read
  */
 typedef struct{
-	uint8_t length; /**< Length of frame. */
-	uint8_t data[ HAL_MAX_FRAME_LENGTH ]; /**< Actual frame data. */
-	uint8_t lqi;	/**< LQI value for received frame. */
-	bool crc;	/**< Flag - did CRC pass for received frame? */
+	uint8_t length;				/**< Length of frame. */
+	uint8_t data[ HAL_MAX_FRAME_LENGTH ];	/**< Actual frame data. */
+	uint8_t lqi;				/**< LQI value for received frame. */
+	bool crc;				/**< Flag - did CRC pass for received frame? */
 } hal_rx_frame_t; /* PORTNOTE: Atmel doesn't have the hal_rx_frame_t here. */
 
 #if HAL_HANDLERS
@@ -1046,8 +1116,17 @@ void hal_clear_rx_start_event_handler( void );
 
 /* == Register Access == */
 
+#if RADIO_TYPE == INTEGRATED
+
+#define hal_register_read( address ) address
+#define hal_register_write( address, value) address=value
+
+#elif RADIO_TYPE == PERIPHERAL
+
 uint8_t	hal_register_read( uint8_t address );
 void hal_register_write( uint8_t address, uint8_t value );
+
+#endif /* RADIO_TYPE */
 
 uint8_t hal_subregister_read( uint8_t address,
 			      uint8_t mask,
@@ -1064,15 +1143,15 @@ void hal_sram_write( uint8_t address, uint8_t length, uint8_t *data );
 #endif
 
 #ifdef HAL_EEPROM
-void hal_eeprom_read_block(uint8_t *addr, uint8_t length, uint8_t *dest);
-void hal_eeprom_write_block(uint8_t *addr, uint8_t length, uint8_t *src);
+void hal_eeprom_read_block( uint8_t *addr, uint8_t length, uint8_t *dest );
+void hal_eeprom_write_block( uint8_t *addr, uint8_t length, uint8_t *src );
 #endif
 
 #if HAL_HANDLERS
-void hal_frame_read( hal_rx_frame_t *rx_frame, rx_callback_t rx_callback);
+void hal_frame_read( hal_rx_frame_t *rx_frame, rx_callback_t rx_callback );
 void hal_frame_write( uint8_t *write_buffer, uint8_t length );
 #else
-void hal_frame_read( hal_rx_frame_t *rx_frame);
+void hal_frame_read( hal_rx_frame_t *rx_frame );
 void hal_frame_write( uint8_t *write_buffer, uint8_t length );
 #endif
 
@@ -1088,6 +1167,9 @@ void hal_frame_write( uint8_t *write_buffer, uint8_t length );
 
 #endif
 
-#endif /* HAL_AVR_H */
+#endif /* defined(__AVR__) */
+
+#endif
+/* HAL_AVR_H */
 /** \} */
 /*EOF*/

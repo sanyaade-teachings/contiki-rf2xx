@@ -40,6 +40,10 @@
 #include <avr/pgmspace.h>
 #include "contiki-conf.h"
 
+#if defined (__AVR_ATmega128RFA1__)
+#define __AVR_ATmega1281__
+#endif
+
 #if defined (__AVR_ATmega128__)
 #include "dev/rs232_atmega128.h"
 #elif defined (__AVR_ATmega1281__)

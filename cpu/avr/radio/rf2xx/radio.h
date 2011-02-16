@@ -252,7 +252,7 @@ typedef enum{
     RADIO_BAT_OK,                     /**< Measured battery voltage is above the voltage threshold. */
     RADIO_CRC_FAILED,                 /**< The CRC failed for the actual frame. */
     RADIO_CHANNEL_ACCESS_FAILURE,     /**< The channel access failed during the auto mode. */
-    RADIO_NO_ACK,                     /**< No acknowledge frame was received. */
+    RADIO_NO_ACK                      /**< No acknowledge frame was received. */
 }radio_status_t;
 
 /** \brief  This enumeration defines the possible modes available for the
@@ -261,11 +261,11 @@ typedef enum{
  *          These constants are extracted from the datasheet.
  *
  */
-typedef enum{
-    CCA_ED                    = 0,    /**< Use energy detection above threshold mode. */
-    CCA_CARRIER_SENSE         = 1,    /**< Use carrier sense mode. */
-    CCA_CARRIER_SENSE_WITH_ED = 2     /**< Use a combination of both energy detection and carrier sense. */
-}radio_cca_mode_t;
+//typedef enum{
+//    CCA_ED                    = 0,    /**< Use energy detection above threshold mode. */
+//    CCA_CARRIER_SENSE         = 1,    /**< Use carrier sense mode. */
+//    CCA_CARRIER_SENSE_WITH_ED = 2     /**< Use a combination of both energy detection and carrier sense. */
+//}radio_cca_mode_t;
 
 
 /** \brief  This enumeration defines the possible CLKM speeds.

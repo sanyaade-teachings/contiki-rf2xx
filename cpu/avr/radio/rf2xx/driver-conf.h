@@ -52,3 +52,5 @@
 #define RF2XX_CONF_AUTORETRIES 0
 
 #define HAL_MINIMAL 1
+
+#define DEBUG 0

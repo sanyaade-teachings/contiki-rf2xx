@@ -8,11 +8,12 @@ CONTIKI_TARGET_SOURCEFILES +=	rs232.c cfs-eeprom.c eeprom.c random.c \
 CONTIKIAVR=$(CONTIKI)/cpu/avr
 CONTIKIBOARD=.
 
-CONTIKI_PLAT_DEFS = -DF_CPU=8000000UL -DAUTO_CRC_PADDING=2
+CONTIKI_PLAT_DEFS = -DF_CPU=16000000UL -DAUTO_CRC_PADDING=2
 
-MCU=atmega1281
+MCU=atmega128rfa1
 #AVRDUDE_PROGRAMMER=jtag2
 AVRDUDE_PROGRAMMER=dapa
+#AVRDUDE_PROGRAMMER=stk500v2
 
 # For usb devices, you may either use PORT=usb, or (e.g. if you have more than one
 # programmer connected) you can use the following trick to find out the serial number:
@@ -21,11 +22,12 @@ AVRDUDE_PROGRAMMER=dapa
 # avrdude -v -P usb:xxxx -c jtag2 -p atmega128
 #AVRDUDE_PORT=usb:00B000000D79
 AVRDUDE_PORT=/dev/parport0
+#AVRDUDE_PORT=/dev/usb/serial/FT232/A2003DUl
 
 
 # Additional avrdude options
 # Verify off
-AVRDUDE_OPTIONS=-V -F
+AVRDUDE_OPTIONS=-V -F -v
 
 
 include $(CONTIKIAVR)/Makefile.avr

@@ -43,8 +43,8 @@
 #define __CONTIKI_CONF_H__
 
 /* MCU and clock rate */
-#define MCU_MHZ 8
-#define PLATFORM 9
+#define MCU_MHZ 16
+//#define PLATFORM 9
 /* #define HARWARE_REVISION ZIGBIT */
 
 /* Clock ticks per second */

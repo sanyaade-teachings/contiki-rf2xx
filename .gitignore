@@ -2,7 +2,7 @@ tags
 obj_*
 symbols.[ch]
 *.native
-*.avr*
+#*.avr*
 *.elf
 *.bin
 *.lss
